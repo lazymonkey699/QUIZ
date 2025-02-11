@@ -1,0 +1,265 @@
+/* ================================
+   Updated CSS for Student Dashboard
+=================================== */
+
+:root {
+  --primary-color: #1b7282;
+  --accent-color: #105a65;
+  --secondary-color: #ffffff;
+  --bg-color: #f3f7fa;
+  --text-color: #333;
+  --subtext-color: #555;
+  --card-bg: #ffffff;
+  --border-color: #e0e0e0;
+  --shadow-color: rgba(0, 0, 0, 0.1);
+  --transition-speed: 0.3s;
+}
+
+/* Background Gradient */
+.student-dashboard {
+  font-family: 'Poppins', sans-serif;
+  background: linear-gradient(to bottom right, #e9f5fc, #f3f7fa);
+  min-height: 100vh;
+  padding: 40px;
+  color: var(--text-color);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 40px;
+}
+
+/* ================================
+ Welcome Section
+=================================== */
+.quiz-section {
+  background: linear-gradient(to right, #ffffff, #f9f9f9);
+  padding: 35px;
+  border-radius: 15px;
+  box-shadow: 0 8px 16px var(--shadow-color);
+  text-align: center;
+  max-width: 500px;
+  width: 100%;
+  transition: transform var(--transition-speed) ease;
+}
+
+.quiz-section:hover {
+  transform: translateY(-3px);
+}
+
+.quiz-section h1 {
+  font-size: 2.5rem;
+  color: var(--primary-color);
+  margin-bottom: 20px;
+  font-weight: 600;
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.15);
+  animation: fadeIn 1s ease-out;
+}
+
+/* Subtle Hover Effect */
+@keyframes fadeIn {
+  from {
+      opacity: 0;
+      transform: translateY(-10px);
+  }
+  to {
+      opacity: 1;
+      transform: translateY(0);
+  }
+}
+
+/* Modern Button */
+.start-quiz-btn {
+  background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+  color: white;
+  font-size: 1.3rem;
+  padding: 14px 32px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all var(--transition-speed) ease;
+  box-shadow: 0 5px 12px var(--shadow-color);
+  font-weight: bold;
+}
+
+.start-quiz-btn:hover {
+  background: linear-gradient(135deg, var(--accent-color), var(--primary-color));
+  transform: translateY(-3px);
+}
+
+/* ================================
+ Upcoming Mock Tests
+=================================== */
+.mocktest-container {
+  background-color: var(--card-bg);
+  padding: 30px;
+  border-radius: 15px;
+  box-shadow: 0 6px 14px var(--shadow-color);
+  width: 80%;
+  max-width: 800px;
+  text-align: center;
+  transition: transform var(--transition-speed) ease;
+}
+
+.mocktest-container:hover {
+  transform: translateY(-4px);
+}
+
+.mocktest-dates {
+  margin-bottom: 20px;
+}
+
+.mocktest-dates h2 {
+  font-size: 2rem;
+  color: var(--primary-color);
+  margin-bottom: 15px;
+}
+
+.mocktest-dates ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+}
+
+/* Date Boxes */
+.mocktest-dates ul li {
+  padding: 14px 18px;
+  border-radius: 10px;
+  background: #eef6fa;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 4px 8px var(--shadow-color);
+  transition: all var(--transition-speed) ease;
+  font-weight: 600;
+  color: var(--text-color);
+  cursor: pointer;
+}
+
+.mocktest-dates ul li:hover {
+  background: #ddeff7;
+  transform: scale(1.08);
+}
+
+/* Start Mock Test Button */
+.start-mocktest-btn {
+  background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+  color: white;
+  font-size: 1.2rem;
+  padding: 12px 30px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all var(--transition-speed);
+  box-shadow: 0 5px 10px var(--shadow-color);
+}
+
+.start-mocktest-btn:hover {
+  background: linear-gradient(135deg, var(--accent-color), var(--primary-color));
+  transform: translateY(-3px);
+}
+
+/* ================================
+ Test History & Leaderboard
+=================================== */
+.test-leaderboard-section {
+  display: flex;
+  gap: 20px;
+  width: 100%;
+  max-width: 1000px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.test-history,
+.leaderboard {
+  background-color: var(--card-bg);
+  padding: 25px;
+  border-radius: 15px;
+  box-shadow: 0 6px 14px var(--shadow-color);
+  overflow-x: auto;
+  flex: 1;
+  min-width: 320px;
+  transition: transform var(--transition-speed) ease;
+}
+
+.test-history:hover,
+.leaderboard:hover {
+  transform: translateY(-4px);
+}
+
+.test-history h2,
+.leaderboard h2 {
+  font-size: 1.9rem;
+  color: var(--primary-color);
+  margin-bottom: 15px;
+}
+
+/* Table Styling */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 1rem;
+}
+
+table thead {
+  background-color: var(--primary-color);
+  color: var(--secondary-color);
+}
+
+table th,
+table td {
+  padding: 14px;
+  border-bottom: 1px solid var(--border-color);
+  text-align: left;
+}
+
+table tbody tr:hover {
+  background-color: #f5f5f5;
+}
+
+/* ================================
+ Responsive Adjustments
+=================================== */
+@media (max-width: 1024px) {
+  .student-dashboard {
+      padding: 30px;
+      gap: 30px;
+  }
+  .mocktest-container {
+      width: 90%;
+  }
+  .test-leaderboard-section {
+      flex-direction: column;
+      align-items: center;
+  }
+}
+
+@media (max-width: 768px) {
+  .quiz-section h1 {
+      font-size: 2rem;
+  }
+  .start-quiz-btn {
+      font-size: 1rem;
+      padding: 12px 25px;
+  }
+  .mocktest-dates ul {
+      flex-direction: column;
+      align-items: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .student-dashboard {
+      padding: 20px;
+      gap: 20px;
+  }
+  .quiz-section h1 {
+      font-size: 1.75rem;
+  }
+  .start-quiz-btn {
+      font-size: 0.9rem;
+      padding: 10px 20px;
+  }
+}

@@ -1,0 +1,141 @@
+/* Root Variables for Consistent Theme */
+:root {
+  --primary-color: #1b7282;
+  --accent-color: #105a65;
+  --secondary-color: #ffffff;
+  --bg-color: #f3f7fa;
+  --text-color: #333;
+  --subtext-color: #555;
+  --card-bg: #ffffff;
+  --border-color: #e0e0e0;
+  --error-color: #e74c3c;
+  --success-color: #2ecc71;
+}
+
+/* Global Styles */
+body {
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+/* Headings */
+h1, h2, h3 {
+  color: var(--primary-color);
+}
+
+h3 {
+  font-size: 24px;
+  margin-bottom: 15px;
+}
+
+/* Form Styling */
+form {
+  background-color: var(--secondary-color);
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  max-width: 500px;
+  margin: 20px auto;
+}
+
+.input-field, select {
+  width: 100%;
+  padding: 10px;
+  margin: 10px 0;
+  border: 1px solid var(--border-color);
+  border-radius: 5px;
+  font-size: 16px;
+  transition: border 0.3s ease;
+}
+
+.input-field:focus, select:focus {
+  border-color: var(--primary-color);
+  outline: none;
+}
+
+/* Button Styling */
+button, .submit-button {
+  background-color: var(--primary-color);
+  color: var(--secondary-color);
+  border: none;
+  padding: 10px 20px;
+  cursor: pointer;
+  border-radius: 5px;
+  font-size: 16px;
+  transition: background-color 0.3s ease;
+}
+
+button:hover, .submit-button:hover {
+  background-color: var(--accent-color);
+}
+
+button:disabled, .submit-button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+/* Dropdown Styling */
+select {
+  background-color: var(--secondary-color);
+  cursor: pointer;
+}
+
+select option {
+  padding: 10px;
+  background-color: var(--secondary-color);
+}
+
+/* Form Containers */
+.create-chapter-form, 
+.create-faculty-form, 
+.create-subchapter-form, 
+.link-chapter-form {
+  margin: 20px auto;
+  padding: 20px;
+  background-color: var(--card-bg);
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  max-width: 500px;
+}
+
+/* Cards */
+.card {
+  background-color: var(--card-bg);
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+}
+
+.card-header {
+  font-size: 18px;
+  font-weight: bold;
+  color: var(--primary-color);
+}
+
+.card-body {
+  font-size: 16px;
+  color: var(--subtext-color);
+}
+
+/* Messages */
+.error-message, .success-message {
+  font-size: 14px;
+  margin-top: 10px;
+  padding: 8px;
+  border-radius: 5px;
+  text-align: center;
+}
+
+.error-message {
+  color: var(--error-color);
+  background-color: rgba(231, 76, 60, 0.1);
+}
+
+.success-message {
+  color: var(--success-color);
+  background-color: rgba(46, 204, 113, 0.1);
+}

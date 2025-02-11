@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import {jwtDecode} from "jwt-decode"; // Adjust import if needed
+import {jwtDecode} from "jwt-decode"; // Using default import for jwt-decode
 import "./CSS/Quiz.css";
 
-const Quiz = ({ questions, setQuizState }) => {
+const MockQuiz = ({ questions, setQuizState }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState({});
   const [timeLeft, setTimeLeft] = useState(3600); // 60 minutes timer
@@ -11,8 +11,8 @@ const Quiz = ({ questions, setQuizState }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
 
-  // Use all questions (or limit if needed, e.g. questions.slice(0,10))
-  const limitedQuestions = questions;
+  // Use all questions passed as prop (or limit them as needed)
+  const limitedQuestions = questions; // (Optional: questions.slice(0, 10))
 
   // Decode token to get faculty_id
   useEffect(() => {
@@ -48,11 +48,10 @@ const Quiz = ({ questions, setQuizState }) => {
         return prev - 1;
       });
     }, 1000);
-
     return () => clearInterval(timer);
   }, []);
 
-  // Function to submit answer to API
+  // Function to submit answer to API (for MockQuiz)
   const submitAnswer = async (questionIndex, answerIndex) => {
     if (!facultyId) {
       console.error("❌ Faculty ID is missing.");
@@ -72,8 +71,7 @@ const Quiz = ({ questions, setQuizState }) => {
 
     try {
       console.log(`📡 Submitting answer for Question ${questionIndex + 1}...`);
-
-      const response = await fetch("/practisetest/answer", {
+      const response = await fetch("/mockexam/answer", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -113,7 +111,7 @@ const Quiz = ({ questions, setQuizState }) => {
     }, 1000); // 1-second delay
   };
 
-  // Handle Skip button (always sends answer_index: 0)
+  // Handle Skip button (sends answer_index: 0)
   const handleSkip = () => {
     setSelectedAnswers((prev) => ({
       ...prev,
@@ -143,50 +141,46 @@ const Quiz = ({ questions, setQuizState }) => {
 
   // Submit quiz and navigate to score page
   const handleSubmit = async () => {
-    // Optionally, you might want to check if the last question has an answer
     if (selectedAnswers[currentIndex] === undefined) {
-      // Optionally, you can force the user to select an answer on the last question
       console.error("❌ Please select an answer before submitting.");
       return;
     }
     const token = localStorage.getItem("authToken");
-    if (!token) return console.error("❌ No token found.");
-
+    if (!token) {
+      console.error("❌ No token found.");
+      return;
+    }
     try {
       console.log("📡 Fetching final score...");
-
-      const scoreResponse = await fetch(`/practisetest/score`, {
+      const scoreResponse = await fetch("/mockexam/score", {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-
       if (!scoreResponse.ok) {
         console.error("❌ Error fetching score.");
         setQuizState("error");
         return;
       }
-
       const scoreData = await scoreResponse.json();
-      localStorage.setItem("quizScoreData", JSON.stringify(scoreData)); // Store score in localStorage
+      localStorage.setItem("quizScoreData", JSON.stringify(scoreData));
       console.log("✅ Score data saved!");
-      navigate("/score"); // Redirect to score page
+      navigate("/score");
     } catch (error) {
       console.error("❌ Error fetching score:", error);
       setQuizState("error");
     }
   };
 
-  // Check if questions exist before rendering
-  if (!limitedQuestions || limitedQuestions.length === 0) {
+  if (!limitedQuestions || limitedQuestions.length === 0)
     return <div>Loading questions...</div>;
-  }
 
   return (
     <div className="quiz-container">
       <div className="timer">
-        ⏳ Time Left: {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, "0")}
+        ⏳ Time Left: {Math.floor(timeLeft / 60)}:
+        {(timeLeft % 60).toString().padStart(2, "0")}
       </div>
 
       <div className="question-box">
@@ -194,38 +188,53 @@ const Quiz = ({ questions, setQuizState }) => {
           Q{currentIndex + 1}: {limitedQuestions[currentIndex].question}
         </h3>
         <ul className="options-list">
-          {Object.entries(limitedQuestions[currentIndex].options).map(([index, option]) => (
-            <li key={index}>
-              <button
-                className={`option-btn ${selectedAnswers[currentIndex] === parseInt(index) ? "selected" : ""}`}
-                onClick={() => handleAnswerSelection(parseInt(index))}
-                disabled={isSubmitting}
-              >
-                {option}
-              </button>
-            </li>
-          ))}
+          {Object.entries(limitedQuestions[currentIndex].options).map(
+            ([index, option]) => (
+              <li key={index}>
+                <button
+                  className={`option-btn ${
+                    selectedAnswers[currentIndex] === parseInt(index)
+                      ? "selected"
+                      : ""
+                  }`}
+                  onClick={() => handleAnswerSelection(parseInt(index))}
+                  disabled={isSubmitting}
+                >
+                  {option}
+                </button>
+              </li>
+            )
+          )}
         </ul>
       </div>
 
       <div className="quiz-buttons">
-        {/* Previous button shown if not on the first question */}
+        {/* Show Previous button if not on the first question */}
         {currentIndex > 0 && (
-          <button className="quiz-btn" onClick={handlePrevious} disabled={isSubmitting}>
+          <button
+            className="quiz-btn"
+            onClick={handlePrevious}
+            disabled={isSubmitting}
+          >
             Previous
           </button>
         )}
 
-        {/* For questions before the last, show Skip and Next buttons */}
         {currentIndex < limitedQuestions.length - 1 ? (
           <>
-            <button className="quiz-btn" onClick={handleSkip} disabled={isSubmitting}>
+            <button
+              className="quiz-btn"
+              onClick={handleSkip}
+              disabled={isSubmitting}
+            >
               Skip
             </button>
             <button
               className="quiz-btn"
               onClick={handleNext}
-              disabled={isSubmitting || selectedAnswers[currentIndex] === undefined}
+              disabled={
+                isSubmitting || selectedAnswers[currentIndex] === undefined
+              }
             >
               Next
             </button>
@@ -235,7 +244,9 @@ const Quiz = ({ questions, setQuizState }) => {
           <button
             className="quiz-btn"
             onClick={handleSubmit}
-            disabled={isSubmitting || selectedAnswers[currentIndex] === undefined}
+            disabled={
+              isSubmitting || selectedAnswers[currentIndex] === undefined
+            }
           >
             Submit
           </button>
@@ -245,4 +256,4 @@ const Quiz = ({ questions, setQuizState }) => {
   );
 };
 
-export default Quiz;
+export default MockQuiz;

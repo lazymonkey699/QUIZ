@@ -1,0 +1,107 @@
+/* Quiz Container */
+.quiz-container {
+    font-family: 'Poppins', sans-serif;
+    background: linear-gradient(135deg, #ffffff, #e1f0ff); /* White to light blue gradient */
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 30px;
+    text-align: center;
+}
+
+/* Timer */
+.timer {
+    font-size: 20px;
+    font-weight: bold;
+    color: #0d1a2a; /* Dark blue for text */
+    background: rgba(255, 255, 255, 0.8); /* Slightly transparent white */
+    padding: 10px 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Question Box */
+.question-box {
+    background: rgba(255, 255, 255, 0.9); /* Clean and light background */
+    padding: 20px;
+    border-radius: 12px;
+    width: 80%;
+    max-width: 600px;
+    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+}
+
+.question-box h3 {
+    font-size: 20px;
+    color: #0d1a2a; /* Dark blue color */
+}
+
+/* Answer Options */
+.options-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.option-btn {
+    display: block;
+    background: rgb(0, 0, 0);
+    border: 2px solid #5fa8d3; /* Soft blue border */
+    padding: 12px;
+    margin: 10px 0;
+    border-radius: 8px;
+    font-size: 16px;
+    width: 100%;
+    max-width: 500px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.option-btn:hover {
+    background: #5fa8d3; /* Soft blue hover */
+    color: white;
+    transform: scale(1.05);
+}
+
+.option-btn.selected {
+    background: #61ed82; /* Soft green for selected option */
+    color: white;
+    border: 2px solid #0d1a2a; /* Dark blue border for selected */
+}
+
+/* Buttons */
+.quiz-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.quiz-btn {
+    background: #5fa8d3; /* Soft blue background */
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    font-size: 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.quiz-btn:hover {
+    background: #4a8bbf; /* Darker blue on hover */
+    transform: scale(1.05);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .question-box {
+        width: 95%;
+    }
+    .option-btn {
+        max-width: 100%;
+    }
+}

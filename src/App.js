@@ -6,6 +6,9 @@ import StudentDashboard from "./components/StudentDashboard";
 import AdminDashboard from "./components/AdminDashboard";
 import Quiz from "./components/Quiz";
 import Score from "./components/Score";
+import Mock from "./components/mock";
+import MockQuiz from "./components/mockquiz";
+import Dashboard from "./components/Dashboard";
 
 const App = () => {
     const token = localStorage.getItem("authToken");
@@ -33,7 +36,7 @@ const App = () => {
         <Router>
             <Routes>
                 {/* Public Route for Login and Signup */}
-                <Route path="/auth" element={<AuthForm />} />
+                <Route path="/login" element={<AuthForm />} />
 
                 {/* Private Route for Student Dashboard */}
                 <Route
@@ -42,10 +45,32 @@ const App = () => {
                         isAuthenticated && role === 1 ? (
                             <StudentDashboard setQuestions={setQuestions} setQuizState={setQuizState} />
                         ) : (
-                            <Navigate to="/auth" />
+                            <Navigate to="/login" />
                         )
                     }
                 />
+                <Route
+                    path="/mock"
+                    element={
+                        isAuthenticated && role === 1 ? (
+                            <Mock setQuestions={setQuestions} setQuizState={setQuizState} />
+                        ) : (
+                            <Navigate to="/login" />
+                        )
+                    }
+                />
+                {/* privated route for dashboard }*/}
+                  <Route
+                    path="/dashboard"
+                    element={
+                        isAuthenticated && role === 1 ? (
+                            <Dashboard setQuestions={setQuestions} setQuizState={setQuizState} />
+                        ) : (
+                            <Navigate to="/login" />
+                        )
+                    }
+                />
+              
 
                 {/* Private Route for Admin Dashboard */}
                 <Route
@@ -54,17 +79,19 @@ const App = () => {
                         isAuthenticated && role === 3 ? (
                             <AdminDashboard />
                         ) : (
-                            <Navigate to="/auth" />
+                            <Navigate to="/login" />
                         )
                     }
                 />
 
                 {/* Public Route for Quiz */}
                 <Route path="/quiz" element={isAuthenticated ? <Quiz questions={questions} setQuizState={setQuizState} /> : <Navigate to="/auth" />} />
+                <Route path="/mockquiz" element={isAuthenticated ? <MockQuiz questions={questions} setQuizState={setQuizState} /> : <Navigate to="/auth" />} />
 
                 {/* Redirect to login page if no match */}
-                <Route path="/" element={<Navigate to="/auth" />} />
+                <Route path="/" element={<Navigate to="/login" />} />
                 <Route path="/score" element={<Score />} />
+
 
             </Routes>
         </Router>
