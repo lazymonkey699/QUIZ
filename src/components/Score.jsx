@@ -82,7 +82,7 @@ const Score = () => {
                 ))}
             </div>
 
-            <button className="finish-btn" onClick={() => navigate("/student-dashboard")}>
+            <button className="finish-btn" onClick={() => navigate("/dashboard")}>
                 Finish Test
             </button>
         </div>

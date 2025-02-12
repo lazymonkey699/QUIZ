@@ -66,7 +66,7 @@ const AuthForm = () => {
                     if (facultyId) {
                         localStorage.setItem("facultyId", facultyId);
                         console.log("Faculty ID stored:", facultyId); // Debug log
-                        navigate("/student-dashboard");
+                        navigate("/dashboard");
                     } else {
                         console.error("Faculty ID is required for non-admin users.");
                         throw new Error("Faculty ID is required for student users.");

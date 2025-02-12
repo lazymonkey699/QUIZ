@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import {jwtDecode} from "jwt-decode"; // Using default import for jwt-decode
+import { jwtDecode } from "jwt-decode"; // Adjust import if needed
 import "./CSS/Quiz.css";
 
-const MockQuiz = ({ questions, setQuizState }) => {
+const Chapterwise = ({ questions, setQuizState }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState({});
   const [timeLeft, setTimeLeft] = useState(3600); // 60 minutes timer
@@ -11,8 +11,8 @@ const MockQuiz = ({ questions, setQuizState }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
 
-  // Use all questions passed as prop (or limit them as needed)
-  const limitedQuestions = questions; // (Optional: questions.slice(0, 10))
+  // Use all questions (or limit if needed, e.g. questions.slice(0,10))
+  const limitedQuestions = questions;
 
   // Decode token to get faculty_id
   useEffect(() => {
@@ -48,57 +48,77 @@ const MockQuiz = ({ questions, setQuizState }) => {
         return prev - 1;
       });
     }, 1000);
+
     return () => clearInterval(timer);
   }, []);
 
-  // Function to submit answer to API (for MockQuiz)
+  // Store chapter_id in sessionStorage when questions are loaded
+  useEffect(() => {
+    if (limitedQuestions.length > 0) {
+      const chapterId = limitedQuestions[0]?.chapter_id || 1; // Fallback to 1 if missing
+      sessionStorage.setItem('chapter_id', chapterId); // Store in sessionStorage
+    }
+  }, [limitedQuestions]);
+
+  // Function to submit answer to API
   const submitAnswer = async (questionIndex, answerIndex) => {
     if (!facultyId) {
-        console.error("❌ Faculty ID is missing.");
-        return;
+      console.error("❌ Faculty ID is missing.");
+      return;
     }
 
     const token = localStorage.getItem("authToken");
     if (!token) {
-        console.error("❌ No token found.");
-        return;
+      console.error("❌ No token found.");
+      return;
     }
 
     if (!limitedQuestions[questionIndex]?.id) {
-        console.error("❌ Question ID is missing for question index:", questionIndex);
-        return;
+      console.error("❌ Question ID is missing for question index:", questionIndex);
+      return;
     }
 
-    // Adjust only when sending to backend: 0 (skip), 1-4 (answers)
+    // Retrieve chapter_id from sessionStorage
+    const chapterId = sessionStorage.getItem("chapter_id");
+    if (!chapterId) {
+      console.error("❌ chapter_id is missing.");
+      return;
+    }
+
+    // Adjusted answer index
     const adjustedAnswerIndex = answerIndex === 0 ? 1 : answerIndex + 1;
 
+    console.log(
+      `📡 Debug: Sending answer for Question ${questionIndex + 1}`,
+      `| Selected Index: ${answerIndex}`,
+      `| Adjusted Index Sent: ${adjustedAnswerIndex}`
+    );
+
     try {
-        console.log(`📡 Submitting answer for Question ${questionIndex + 1}...`);
+      const response = await fetch("/practise/chapteranswer", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          question_id: limitedQuestions[questionIndex].id,
+          answer_index: adjustedAnswerIndex,
+          chapter_id: chapterId, // Include chapter_id in the request
+        }),
+      });
 
-        const response = await fetch("/mockexam/answer", {
-            method: "POST",
-            headers: {
-                Authorization: `Bearer ${token}`,
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-                question_id: limitedQuestions[questionIndex].id,
-                answer_index: adjustedAnswerIndex, // Convert 0-based to 1-based index
-            }),
-        });
-
-        if (!response.ok) {
-            const errorMessage = await response.text();
-            console.error("❌ Failed to submit answer:", errorMessage);
-        } else {
-            console.log("✅ Answer submitted successfully!");
-        }
+      if (!response.ok) {
+        const errorMessage = await response.text();
+        console.error("❌ Failed to submit answer:", errorMessage);
+      } else {
+        console.log("✅ Answer submitted successfully!");
+      }
     } catch (error) {
-        console.error("❌ Error submitting answer:", error);
-        setQuizState("error");
+      console.error("❌ Error submitting answer:", error);
+      setQuizState("error");
     }
-};
-
+  };
 
   // Handle Next button (only allowed if an answer is selected)
   const handleNext = () => {
@@ -116,7 +136,7 @@ const MockQuiz = ({ questions, setQuizState }) => {
     }, 1000); // 1-second delay
   };
 
-  // Handle Skip button (sends answer_index: 0)
+  // Handle Skip button (always sends answer_index: 0)
   const handleSkip = () => {
     setSelectedAnswers((prev) => ({
       ...prev,
@@ -141,51 +161,56 @@ const MockQuiz = ({ questions, setQuizState }) => {
 
   // Handle answer selection (overwrites any previous answer for the question)
   const handleAnswerSelection = (index) => {
+    console.log(`🟢 Selected Option: ${index} (0-based)`);
     setSelectedAnswers((prev) => ({ ...prev, [currentIndex]: index }));
   };
 
   // Submit quiz and navigate to score page
   const handleSubmit = async () => {
+    // Optionally, you might want to check if the last question has an answer
     if (selectedAnswers[currentIndex] === undefined) {
+      // Optionally, you can force the user to select an answer on the last question
       console.error("❌ Please select an answer before submitting.");
       return;
     }
     const token = localStorage.getItem("authToken");
-    if (!token) {
-      console.error("❌ No token found.");
-      return;
-    }
+    if (!token) return console.error("❌ No token found.");
+
     try {
       console.log("📡 Fetching final score...");
-      const scoreResponse = await fetch("/mockexam/score", {
+
+      const scoreResponse = await fetch(`/practise/chapterscore`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
+
       if (!scoreResponse.ok) {
         console.error("❌ Error fetching score.");
         setQuizState("error");
         return;
       }
+
       const scoreData = await scoreResponse.json();
-      localStorage.setItem("quizScoreData", JSON.stringify(scoreData));
+      localStorage.setItem("quizScoreData", JSON.stringify(scoreData)); // Store score in localStorage
       console.log("✅ Score data saved!");
-      navigate("/score");
+      navigate("/score"); // Redirect to score page
     } catch (error) {
       console.error("❌ Error fetching score:", error);
       setQuizState("error");
     }
   };
 
-  if (!limitedQuestions || limitedQuestions.length === 0)
+  // Check if questions exist before rendering
+  if (!limitedQuestions || limitedQuestions.length === 0) {
     return <div>Loading questions...</div>;
+  }
 
   return (
     <div className="quiz-container">
       <div className="timer">
-        ⏳ Time Left: {Math.floor(timeLeft / 60)}:
-        {(timeLeft % 60).toString().padStart(2, "0")}
+        ⏳ Time Left: {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, "0")}
       </div>
 
       <div className="question-box">
@@ -193,53 +218,38 @@ const MockQuiz = ({ questions, setQuizState }) => {
           Q{currentIndex + 1}: {limitedQuestions[currentIndex].question}
         </h3>
         <ul className="options-list">
-          {Object.entries(limitedQuestions[currentIndex].options).map(
-            ([index, option]) => (
-              <li key={index}>
-                <button
-                  className={`option-btn ${
-                    selectedAnswers[currentIndex] === parseInt(index)
-                      ? "selected"
-                      : ""
-                  }`}
-                  onClick={() => handleAnswerSelection(parseInt(index))}
-                  disabled={isSubmitting}
-                >
-                  {option}
-                </button>
-              </li>
-            )
-          )}
+          {Object.entries(limitedQuestions[currentIndex].options).map(([index, option]) => (
+            <li key={index}>
+              <button
+                className={`option-btn ${selectedAnswers[currentIndex] === parseInt(index) ? "selected" : ""}`}
+                onClick={() => handleAnswerSelection(parseInt(index))}
+                disabled={isSubmitting}
+              >
+                {option}
+              </button>
+            </li>
+          ))}
         </ul>
       </div>
 
       <div className="quiz-buttons">
-        {/* Show Previous button if not on the first question */}
+        {/* Previous button shown if not on the first question */}
         {currentIndex > 0 && (
-          <button
-            className="quiz-btn"
-            onClick={handlePrevious}
-            disabled={isSubmitting}
-          >
+          <button className="quiz-btn" onClick={handlePrevious} disabled={isSubmitting}>
             Previous
           </button>
         )}
 
+        {/* For questions before the last, show Skip and Next buttons */}
         {currentIndex < limitedQuestions.length - 1 ? (
           <>
-            <button
-              className="quiz-btn"
-              onClick={handleSkip}
-              disabled={isSubmitting}
-            >
+            <button className="quiz-btn" onClick={handleSkip} disabled={isSubmitting}>
               Skip
             </button>
             <button
               className="quiz-btn"
               onClick={handleNext}
-              disabled={
-                isSubmitting || selectedAnswers[currentIndex] === undefined
-              }
+              disabled={isSubmitting || selectedAnswers[currentIndex] === undefined}
             >
               Next
             </button>
@@ -249,9 +259,7 @@ const MockQuiz = ({ questions, setQuizState }) => {
           <button
             className="quiz-btn"
             onClick={handleSubmit}
-            disabled={
-              isSubmitting || selectedAnswers[currentIndex] === undefined
-            }
+            disabled={isSubmitting || selectedAnswers[currentIndex] === undefined}
           >
             Submit
           </button>
@@ -261,4 +269,4 @@ const MockQuiz = ({ questions, setQuizState }) => {
   );
 };
 
-export default MockQuiz;
+export default Chapterwise;

@@ -9,6 +9,7 @@ import Score from "./components/Score";
 import Mock from "./components/mock";
 import MockQuiz from "./components/mockquiz";
 import Dashboard from "./components/Dashboard";
+import Chapterwise from "./components/Chapterwise";
 
 const App = () => {
     const token = localStorage.getItem("authToken");
@@ -87,6 +88,7 @@ const App = () => {
                 {/* Public Route for Quiz */}
                 <Route path="/quiz" element={isAuthenticated ? <Quiz questions={questions} setQuizState={setQuizState} /> : <Navigate to="/auth" />} />
                 <Route path="/mockquiz" element={isAuthenticated ? <MockQuiz questions={questions} setQuizState={setQuizState} /> : <Navigate to="/auth" />} />
+                <Route path="/chapterwise" element={isAuthenticated ? <Chapterwise questions={questions} setQuizState={setQuizState} /> : <Navigate to="/auth" />} />
 
                 {/* Redirect to login page if no match */}
                 <Route path="/" element={<Navigate to="/login" />} />

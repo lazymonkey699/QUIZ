@@ -1,14 +1,14 @@
 /* Modern CSS Reset and Variables */
 :root {
-  --primary: #2c5282;
-  --primary-dark: #1a365d;
-  --secondary: #4299e1;
-  --success: #48bb78;
-  --background: #f7fafc;
-  --surface: #ffffff;
-  --text-primary: #2d3748;
-  --text-secondary: #4a5568;
-  --border-radius: 12px;
+  --primary: #05252a; /* Dark greenish blue */
+  --primary-dark: #260732; /* Darker shade */
+  --secondary: #05252a; /* Lighter greenish blue */
+  --success: #48bb78; /* Success color remains the same */
+  --background: #f7fafc; /* Background color remains the same */
+  --surface: #ffffff; /* Surface color remains the same */
+  --text-primary: #040f13; /* Text primary remains the same */
+  --text-secondary: #4a5568; /* Text secondary remains the same */
+  --border-radius: 12px; /* Border radius remains the same */
   --shadow-sm: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
   --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
   --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
@@ -106,7 +106,7 @@ body {
 .mock-section h3,
 .leaderboard-section h3 {
   font-size: 1.25rem;
-  color: var(--primary);
+  color: var(--primary); /* Updated to new primary color */
   margin-bottom: 1.5rem;
   font-weight: 600;
   text-transform: uppercase;
@@ -117,7 +117,7 @@ body {
 .start-quiz-btn,
 .start-test-btn,
 .start-mock-btn {
-  background: var(--primary);
+  background: var(--primary); /* Updated to new primary color */
   color: white;
   padding: 1rem 2rem;
   border: none;
@@ -134,7 +134,7 @@ body {
 .start-quiz-btn:hover,
 .start-test-btn:hover,
 .start-mock-btn:hover {
-  background: var(--primary-dark);
+  background: var(--primary-dark); /* Updated to new primary dark color */
   transform: translateY(-1px);
 }
 
@@ -153,7 +153,7 @@ body {
   font-size: 1rem;
   margin-bottom: 1.5rem;
   appearance: none;
-  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%232c5282'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%232b6e4f'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 1rem center;
   background-size: 1.5rem;
@@ -178,7 +178,7 @@ body {
   padding: 1rem;
   margin-bottom: 0.75rem;
   border-radius: 8px;
-  border-left: 4px solid var(--secondary);
+  border-left: 4px solid var(--secondary); /* Updated to new secondary color */
   transition: var(--transition);
 }
 
@@ -262,7 +262,7 @@ body {
   * {
       animation-duration: 0.01ms !important;
       animation-iteration-count: 1 !important;
-      transition-duration: 0.01ms !important;
+      transition-duration: 0 .01ms !important;
       scroll-behavior: auto !important;
   }
 }

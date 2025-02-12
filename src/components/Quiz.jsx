@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import {jwtDecode} from "jwt-decode"; // Adjust import if needed
+import { jwtDecode } from "jwt-decode"; // Adjust import if needed
 import "./CSS/Quiz.css";
 
 const Quiz = ({ questions, setQuizState }) => {
@@ -53,49 +53,58 @@ const Quiz = ({ questions, setQuizState }) => {
   }, []);
 
   // Function to submit answer to API
-  const submitAnswer = async (questionIndex, answerIndex) => {
-    if (!facultyId) {
-      console.error("❌ Faculty ID is missing.");
-      return;
+  // Function to submit answer to API
+const submitAnswer = async (questionIndex, answerIndex) => {
+  if (!facultyId) {
+    console.error("❌ Faculty ID is missing.");
+    return;
+  }
+
+  const token = localStorage.getItem("authToken");
+  if (!token) {
+    console.error("❌ No token found.");
+    return;
+  }
+
+  if (!limitedQuestions[questionIndex]?.id) {
+    console.error("❌ Question ID is missing for question index:", questionIndex);
+    return;
+  }
+
+  // Fix: Send 1 for the first option, and 2-4 for other options
+  const adjustedAnswerIndex = answerIndex === 0 ? 1 : answerIndex + 1; // 0 -> 1 (for first option), else answerIndex + 1
+
+  // Debug log to verify what is being sent
+  console.log(
+    `📡 Debug: Sending answer for Question ${questionIndex + 1}`,
+    `| Selected Index: ${answerIndex}`,
+    `| Adjusted Index Sent: ${adjustedAnswerIndex}`
+  );
+
+  try {
+    const response = await fetch("/practisetest/answer", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        question_id: limitedQuestions[questionIndex].id,
+        answer_index: adjustedAnswerIndex, // Send the corrected 1-based index
+      }),
+    });
+
+    if (!response.ok) {
+      const errorMessage = await response.text();
+      console.error("❌ Failed to submit answer:", errorMessage);
+    } else {
+      console.log("✅ Answer submitted successfully!");
     }
-
-    const token = localStorage.getItem("authToken");
-    if (!token) {
-      console.error("❌ No token found.");
-      return;
-    }
-
-    if (!limitedQuestions[questionIndex]?.id) {
-      console.error("❌ Question ID is missing for question index:", questionIndex);
-      return;
-    }
-
-    try {
-      console.log(`📡 Submitting answer for Question ${questionIndex + 1}...`);
-
-      const response = await fetch("/practisetest/answer", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          question_id: limitedQuestions[questionIndex].id,
-          answer_index: Number(answerIndex),
-        }),
-      });
-
-      if (!response.ok) {
-        const errorMessage = await response.text();
-        console.error("❌ Failed to submit answer:", errorMessage);
-      } else {
-        console.log("✅ Answer submitted successfully!");
-      }
-    } catch (error) {
-      console.error("❌ Error submitting answer:", error);
-      setQuizState("error");
-    }
-  };
+  } catch (error) {
+    console.error("❌ Error submitting answer:", error);
+    setQuizState("error");
+  }
+};
 
   // Handle Next button (only allowed if an answer is selected)
   const handleNext = () => {
@@ -138,8 +147,10 @@ const Quiz = ({ questions, setQuizState }) => {
 
   // Handle answer selection (overwrites any previous answer for the question)
   const handleAnswerSelection = (index) => {
+    console.log(`🟢 Selected Option: ${index} (0-based)`);
     setSelectedAnswers((prev) => ({ ...prev, [currentIndex]: index }));
   };
+  
 
   // Submit quiz and navigate to score page
   const handleSubmit = async () => {
