@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import './CSS/Score.css';
+import "./CSS/Score.css";
 
 const Score = () => {
     const navigate = useNavigate();
@@ -19,20 +19,20 @@ const Score = () => {
                 const response = await fetch("/practisetest/score", {
                     method: "GET",
                     headers: {
-                        "Authorization": `Bearer ${token}`,
+                        Authorization: `Bearer ${token}`,
                     },
                 });
 
                 if (!response.ok) {
-                    console.error("❌ Error fetching score data");
-                    navigate("/student-dashboard");
-                    return;
+                    throw new Error("Failed to fetch score data");
                 }
 
                 const data = await response.json();
+                console.log("Full API response:", JSON.stringify(data, null, 2));
+                console.log("Number of questions in questions array:", data.score.questions.length);
                 setScoreData(data);
             } catch (error) {
-                console.error("❌ Error fetching score:", error);
+                console.error("Error fetching score:", error);
                 navigate("/student-dashboard");
             } finally {
                 setLoading(false);
@@ -42,49 +42,105 @@ const Score = () => {
         fetchScore();
     }, [navigate]);
 
-    if (loading) return <div className="loading-message">Loading...</div>;
-    if (!scoreData) return <div className="error-message">No score data available.</div>;
+    if (loading) {
+        return (
+            <div className="loading-container">
+                <div className="spinner"></div>
+                <p>Loading Assessment Results...</p>
+            </div>
+        );
+    }
+
+    if (!scoreData || !scoreData.score || !scoreData.score.questions) {
+        return (
+            <div className="error-container">
+                <p>No assessment data available. Please contact your instructor.</p>
+            </div>
+        );
+    }
+
+    const totalQuestions = scoreData.score.questions.length;
 
     return (
-        <div className="score-container">
-            <div className="result-box">
-                <h2>Quiz Results</h2>
-                <h3>Total Score: {scoreData.score.total_score}</h3>
+        <div className="score-dashboard">
+            <header className="score-header">
+                <h1>Engineering Assessment Results</h1>
+                <div className="score-summary">
+                    <span>Total Score: {scoreData.score.total_score}</span>
+                    <span>Total Questions: {totalQuestions}</span>
+                    <span>Completion Date: {new Date().toLocaleDateString()}</span>
+                </div>
+            </header>
 
-                {scoreData.score.questions.map((q, index) => (
-                    <div key={index} className="question-box">
-                        <h4>Q{index + 1}: {q.question}</h4>
+            <main className="results-container">
+                {scoreData.score.questions.map((q, index) => {
+                    let status;
+                    if (q.user_answer === null || q.user_answer === undefined) {
+                        status = "Skipped";
+                    } else if (q.answer_status) {
+                        status = "Correct";
+                    } else {
+                        status = "Incorrect";
+                    }
 
-                        <ul className="options-list">
-                            {Object.entries(q.options).map(([optIndex, option]) => (
-                                <li
-                                    key={optIndex}
-                                    className={`option ${
-                                        parseInt(optIndex) === q.correct_answer
+                    return (
+                        <div key={index} className="question-card">
+                            <div className="question-header">
+                                <h3>Problem {index + 1} {q.level && `(Level ${q.level})`}</h3>
+                                <span
+                                    className={`status-badge ${
+                                        status.toLowerCase() === "correct"
                                             ? "correct"
-                                            : parseInt(optIndex) === q.user_answer
-                                            ? "wrong"
-                                            : ""
+                                            : status.toLowerCase() === "incorrect"
+                                            ? "incorrect"
+                                            : "skipped"
                                     }`}
                                 >
-                                    {option}{" "}
-                                    {parseInt(optIndex) === q.correct_answer ? "✅" : ""}
-                                    {parseInt(optIndex) === q.user_answer &&
-                                    parseInt(optIndex) !== q.correct_answer
-                                        ? "❌"
-                                        : ""}
-                                </li>
-                            ))}
-                        </ul>
+                                    {status}
+                                </span>
+                            </div>
+                            <p className="question-text">{q.question}</p>
 
-                        <p><strong>Status:</strong> {q.answer_status}</p>
-                    </div>
-                ))}
-            </div>
+                            <div className="options-container">
+                                {Object.entries(q.options).map(([optIndex, option]) => {
+                                    const isCorrect = parseInt(optIndex) === q.correct_answer;
+                                    const isUserAnswer = parseInt(optIndex) === q.user_answer;
+                                    return (
+                                        <div
+                                            key={optIndex}
+                                            className={`option-item ${
+                                                isCorrect
+                                                    ? "correct"
+                                                    : isUserAnswer
+                                                    ? "incorrect"
+                                                    : ""
+                                            }`}
+                                        >
+                                            <span className="option-letter">
+                                                {String.fromCharCode(65 + parseInt(optIndex))}.
+                                            </span>
+                                            <span className="option-text">{option}</span>
+                                            {isCorrect && <span className="check">✓</span>}
+                                            {isUserAnswer && !isCorrect && (
+                                                <span className="cross">✗</span>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    );
+                })}
+            </main>
 
-            <button className="finish-btn" onClick={() => navigate("/dashboard")}>
-                Finish Test
-            </button>
+            <footer className="score-footer">
+                <button
+                    className="dashboard-btn"
+                    onClick={() => navigate("/student-dashboard")}
+                >
+                    Return to Engineering Dashboard
+                </button>
+            </footer>
         </div>
     );
 };
