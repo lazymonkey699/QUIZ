@@ -2,17 +2,17 @@
 .dashboard-container {
   display: flex;
   min-height: 100vh;
-  background: linear-gradient(135deg, #eef2f7 0%, #d9e2ff 100%);
+  background: linear-gradient(135deg, #e8ecef 0%, #d3dce6 100%); /* More professional gradient */
   overflow-x: hidden;
 }
 
 .dashboard-content {
   flex: 1;
-  padding: 25px; /* Further reduced padding */
+  padding: 25px;
   margin-left: 80px;
   transition: margin-left 0.3s ease-in-out;
   background: #ffffff;
-  border-radius: 0 15px 15px 0; /* Smaller radius */
+  border-radius: 0 15px 15px 0;
   box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
 }
 
@@ -26,13 +26,13 @@
 
 /* Header */
 .dashboard-header {
-  margin-bottom: 25px; /* Reduced margin */
+  margin-bottom: 25px;
   text-align: center;
 }
 
 .fade-in {
-  font-size: 32px; /* Slightly smaller */
-  font-weight: 800;
+  font-size: 32px;
+  font-weight: 700; /* Slightly less bold for a formal look */
   color: #1a3c5e;
   margin: 0 0 12px;
   animation: fadeIn 0.8s ease-out;
@@ -46,14 +46,14 @@
 .user-stats {
   display: flex;
   justify-content: center;
-  gap: 15px; /* Further reduced gap */
+  gap: 15px;
   flex-wrap: wrap;
   margin-bottom: 8px;
 }
 
 .stat-item {
   background: #f7f9fc;
-  padding: 6px 12px; /* Smaller padding */
+  padding: 6px 12px;
   border-radius: 8px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   border: 1px solid #e0e7ff;
@@ -61,19 +61,19 @@
 
 .stat-label {
   display: block;
-  font-size: 12px; /* Smaller */
+  font-size: 12px;
   color: #666;
   font-weight: 500;
 }
 
 .stat-value {
-  font-size: 14px; /* Smaller */
+  font-size: 14px;
   color: #1a3c5e;
   font-weight: 700;
 }
 
 .datetime {
-  font-size: 13px; /* Smaller */
+  font-size: 13px;
   color: #888;
   font-style: italic;
 }
@@ -81,49 +81,49 @@
 /* Grid and Cards */
 .dashboard-grid {
   display: grid;
-  grid-template-columns: 2fr 1fr; /* Adjusted ratio for better balance */
-  gap: 15px; /* Reduced gap */
-  max-width: 1100px; /* Smaller max-width */
+  grid-template-columns: 2fr 1fr;
+  gap: 15px;
+  max-width: 1100px;
   margin: 0 auto;
 }
 
 .card {
   background: #fff;
-  padding: 15px; /* Reduced padding */
+  padding: 15px;
   border-radius: 10px;
   box-shadow: 0 3px 10px rgba(0, 0, 0, 0.06);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .card:hover {
-  transform: translateY(-2px); /* Reduced lift */
+  transform: translateY(-2px);
   box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
 }
 
 .card h2 {
   margin: 0 0 10px;
-  font-size: 18px; /* Smaller heading */
+  font-size: 18px;
   color: #1a3c5e;
-  font-weight: 700;
+  font-weight: 600; /* Slightly less bold for professionalism */
 }
 
 /* Test History */
 .test-history table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 13px; /* Smaller font */
+  font-size: 13px;
 }
 
 .test-history th,
 .test-history td {
-  padding: 8px; /* Reduced padding */
+  padding: 8px;
   text-align: center;
-  border-bottom: 1px solid #eef2f7;
+  border-bottom: 1px solid #e8ecef; /* More formal border color */
 }
 
 .test-history th {
   background: #1a3c5e;
-  color: rgb(36, 63, 69);
+  color: white;
   font-weight: 600;
 }
 
@@ -136,48 +136,69 @@
   font-style: italic;
 }
 
-/* Practice Section (Counter + Button) */
+/* Practice Section (Chapter Selection + Counter + Button) */
 .practice-section {
   display: flex;
   flex-direction: column;
-  justify-content: space-between; /* Space out counter and button */
+  justify-content: space-between;
+}
+
+.chapter-selection {
+  margin-bottom: 15px;
+}
+
+.chapter-selection select {
+  width: 100%;
+  padding: 8px;
+  font-size: 14px;
+  border: 1px solid #e0e7ff;
+  border-radius: 6px;
+  background: #f7f9fc;
+  color: #1a3c5e;
+  cursor: pointer;
+  transition: border-color 0.3s ease;
+}
+
+.chapter-selection select:focus {
+  outline: none;
+  border-color: #1a3c5e;
 }
 
 .counter-metric {
   text-align: center;
-  margin-bottom: 15px; /* Space between counter and button */
+  margin-bottom: 15px;
 }
 
 .counter-value {
-  font-size: 24px; /* Further reduced from 28px */
+  font-size: 24px;
   font-weight: 800;
   color: #1a3c5e;
   display: block;
 }
 
 .counter-label {
-  font-size: 12px; /* Further reduced from 14px */
+  font-size: 12px;
   color: #777;
   font-weight: 500;
 }
 
 /* Start Quiz Button */
 .start-quiz-btn {
-  padding: 8px 20px; /* Further reduced padding */
-  font-size: 14px; /* Smaller font */
+  padding: 8px 20px;
+  font-size: 14px;
   font-weight: 600;
   background: #1a3c5e;
   color: white;
   border: none;
-  border-radius: 6px; /* Smaller radius */
+  border-radius: 6px;
   cursor: pointer;
   transition: background 0.3s ease, transform 0.2s ease;
-  align-self: center; /* Center within card */
+  align-self: center;
 }
 
 .start-quiz-btn:hover {
   background: #142a44;
-  transform: scale(1.02); /* Subtler scale */
+  transform: scale(1.02);
 }
 
 .start-quiz-btn:disabled {
@@ -195,7 +216,7 @@
 
 .loading-spinner::before {
   content: "";
-  width: 14px; /* Smaller spinner */
+  width: 14px;
   height: 14px;
   border: 2px solid #fff;
   border-top-color: transparent;
@@ -220,7 +241,7 @@
   }
 
   .dashboard-grid {
-    grid-template-columns: 1fr; /* Stack on mobile */
+    grid-template-columns: 1fr;
   }
 
   .fade-in {
@@ -230,6 +251,11 @@
   .user-stats {
     gap: 10px;
     flex-direction: column;
+  }
+
+  .chapter-selection select {
+    font-size: 13px;
+    padding: 6px;
   }
 
   .start-quiz-btn {

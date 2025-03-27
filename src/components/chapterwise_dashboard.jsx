@@ -1,21 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { jwtDecode } from "jwt-decode"; 
+import { jwtDecode } from "jwt-decode";
 import Sidebar from "./sidebar"; // Importing the Sidebar component
-import "./CSS/StudentDashboard.css";
+import "./CSS/Chapterwise.css"; // Ensure this CSS file exists
 
-const StudentDashboard = ({ setQuestions, setQuizState }) => {
-  // Debug props to verify they are correctly passed
-  console.log("[DEBUG] Props received:", {
-    setQuestionsType: typeof setQuestions,
-    setQuizStateType: typeof setQuizState
-  });
-
+const Chapterwise = () => {
   const [username, setUsername] = useState("Guest");
   const [facultyId, setFacultyId] = useState(null);
   const [dateTime, setDateTime] = useState("");
   const [location, setLocation] = useState({ city: "Loading...", province: "Loading..." });
-
+  const [chapters, setChapters] = useState([]);
+  const [selectedChapter, setSelectedChapter] = useState("");
   const navigate = useNavigate();
 
   // Fetch location using IP-API
@@ -58,87 +53,78 @@ const StudentDashboard = ({ setQuestions, setQuizState }) => {
         const decoded = jwtDecode(token);
         setUsername(decoded.sub || "Guest");
         setFacultyId(decoded.faculty);
-        console.log("[DEBUG] Decoded token:", { username: decoded.sub, facultyId: decoded.faculty });
       } catch (err) {
-        console.error("[ERROR] Invalid token:", err);
+        console.error("Invalid token:", err);
       }
-    } else {
-      console.warn("[WARNING] No auth token found");
     }
   }, []);
 
-  // Start Quiz Function with improved error handling
-  const startQuiz = async () => {
-    if (!facultyId) {
-      console.error("[ERROR] Faculty ID is missing");
-      return;
-    }
-
-    // Validate that setQuestions and setQuizState are functions
-    if (typeof setQuestions !== 'function') {
-      console.error("[ERROR] setQuestions is not a function. Type:", typeof setQuestions);
-      return;
-    }
-
-    if (typeof setQuizState !== 'function') {
-      console.error("[ERROR] setQuizState is not a function. Type:", typeof setQuizState);
-      return;
-    }
-
-    try {
+  // Fetch chapters from API
+  useEffect(() => {
+    const fetchChapters = async () => {
       const token = localStorage.getItem("authToken");
+
       if (!token) {
-        console.error("[ERROR] No auth token found");
+        console.error("❌ No authToken found");
+        alert("You must be logged in to view chapters.");
+        navigate("/login");
         return;
       }
 
-      console.log(`[DEBUG] Fetching questions for Faculty ID: ${facultyId}`);
-      const response = await fetch(`/practisetest/questions?faculty_id=${facultyId}`, {
+      try {
+        const response = await fetch("/allchapters", {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!response.ok) throw new Error("Failed to fetch chapters");
+
+        const data = await response.json();
+        setChapters(data);
+      } catch (error) {
+        console.error("❌ Error fetching chapters:", error);
+      }
+    };
+
+    fetchChapters();
+  }, [navigate]);
+
+  // Handle chapter selection and start the test
+  const handleStartTest = async () => {
+    if (!selectedChapter) {
+      alert("Please select a chapter before starting the test.");
+      return;
+    }
+
+    sessionStorage.setItem("chapter_id", selectedChapter);
+
+    try {
+      const token = localStorage.getItem("authToken");
+      const response = await fetch(`/practise/chapters/${selectedChapter}`, {
         method: "GET",
-        headers: { "Authorization": `Bearer ${token}` },
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       });
 
-      console.log(`[DEBUG] Response Status: ${response.status}`);
-      if (!response.ok) {
-        throw new Error(`Error fetching questions: ${response.statusText}`);
-      }
+      if (!response.ok) throw new Error("Failed to fetch questions");
 
-      const data = await response.json();
-      console.log("[DEBUG] Received data structure:", Object.keys(data));
+      const questions = await response.json();
+      sessionStorage.setItem("questions", JSON.stringify(questions)); // Store fetched questions
 
-      if (!data.questions || Object.keys(data.questions).length === 0) {
-        console.warn("[WARNING] No questions found in response");
-        throw new Error("No questions found in response");
-      }
-
-      // More robust data processing with null checks
-      const allQuestions = Object.keys(data.questions || {}).flatMap((level) =>
-        (data.questions[level] || []).flatMap((chapter) =>
-          (chapter.subchapters || []).map((q) => ({
-            id: q.id,
-            question: q.question,
-            options: q.options ? Object.values(q.options) : [], // Added null check
-            correctAnswer: q.correct_answer,
-          }))
-        )
-      );
-
-      console.log(`[DEBUG] Processed ${allQuestions.length} questions`);
-      
-      // Set state and navigate
-      setQuestions(allQuestions);
-      setQuizState("active");
-      navigate("/quiz");
-    } catch (err) {
-      console.error("[ERROR] Error fetching questions:", err);
+      navigate("/chapterquiz"); // Navigate to the quiz page
+    } catch (error) {
+      console.error("❌ Error fetching questions:", error);
+      alert("Failed to load questions. Please try again.");
     }
   };
 
   return (
     <div className="dashboard-container">
-      <Sidebar /> {/* Sidebar Component Here */}
+      <Sidebar /> {/* Sidebar Component */}
 
-      {/* Main Content */}
       <main className="dashboard-content">
         <h1>Welcome, {username}!</h1>
 
@@ -149,9 +135,30 @@ const StudentDashboard = ({ setQuestions, setQuizState }) => {
           <div className="info-box"><strong>Date & Time:</strong> {dateTime}</div>
         </div>
 
+        {/* Chapter Selection */}
+        <div className="chapter-selection">
+          <h2>Select a Chapter</h2>
+          <select
+            value={selectedChapter}
+            onChange={(e) => setSelectedChapter(e.target.value)}
+          >
+            <option value="">-- Select a Chapter --</option>
+            {chapters.map((chapter) =>
+  chapter.id ? (
+    <option key={chapter.id} value={chapter.id}>
+      {chapter.name}
+    </option>
+  ) : null
+)}
+          </select>
+          <button onClick={handleStartTest} disabled={!selectedChapter}>
+            Start Test
+          </button>
+        </div>
+
         {/* Test History */}
         <div className="test-history">
-          <h2>Last Test History</h2>
+          <h2>Test History</h2>
           <table>
             <thead>
               <tr>
@@ -173,12 +180,9 @@ const StudentDashboard = ({ setQuestions, setQuizState }) => {
           <h2>Practice Test Counter</h2>
           <p><strong>5 Times Taken</strong></p>
         </div>
-
-        {/* Start Quiz Button */}
-        <button className="start-quiz-btn" onClick={startQuiz}>Start Test</button>
       </main>
     </div>
   );
 };
 
-export default StudentDashboard;
+export default Chapterwise;

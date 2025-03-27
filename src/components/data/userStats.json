@@ -1,0 +1,39 @@
+{
+    "testHistory": [
+      {
+        "id": 1,
+        "date": "2025-03-5",
+        "score": 92,
+        "skipped": 6,
+        "totalQuestions": 20,
+        "timeTaken": "18:45"
+      },
+      {
+        "id": 2,
+        "date": "2025-03-10",
+        "score": 87,
+        "skipped": 11,
+        "totalQuestions": 25,
+        "timeTaken": "22:10"
+      },
+      {
+        "id": 3,
+        "date": "2025-03-15",
+        "score": 95,
+        "skipped": 9,
+        "totalQuestions": 15,
+        "timeTaken": "14:30"
+      },
+      {
+        "id": 40,
+        "date": "2025-03-25",
+        "score": 95,
+        "skipped": 4,
+        "totalQuestions": 15,
+        "timeTaken": "14:30"
+      }
+    ],
+    "practiceCount": 5,
+    "averageScore": 82.53,
+    "totalTestsCompleted": 5
+  }

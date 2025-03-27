@@ -1,270 +1,226 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { jwtDecode } from "jwt-decode"; // Adjust import if needed
-import "./CSS/Quiz.css";
+import { jwtDecode } from "jwt-decode";
+import Sidebar from "./sidebar"; // Ensure correct path
+import chapterStats from "./data/chapterStats.json"; // Adjust path as needed
+import "./CSS/Chapterwise.css";
 
-const Chapterwise = ({ questions, setQuizState }) => {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [selectedAnswers, setSelectedAnswers] = useState({});
-  const [timeLeft, setTimeLeft] = useState(3600); // 60 minutes timer
-  const [facultyId, setFacultyId] = useState(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+const Chapterwise = () => {
   const navigate = useNavigate();
 
-  // Use all questions (or limit if needed, e.g. questions.slice(0,10))
-  const limitedQuestions = questions;
+  const [username, setUsername] = useState("Guest");
+  const [facultyId, setFacultyId] = useState(null);
+  const [dateTime, setDateTime] = useState(new Date().toLocaleString("en-US", { dateStyle: "full", timeStyle: "short" }));
+  const [location, setLocation] = useState({ city: "Loading...", province: "Loading..." });
+  const [chapters, setChapters] = useState([]);
+  const [selectedChapter, setSelectedChapter] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(() => window.innerWidth > 768);
+  const [testHistory, setTestHistory] = useState([]);
+  const [practiceCount, setPracticeCount] = useState(0);
+  const [averageScore, setAverageScore] = useState(0);
+  const [totalTests, setTotalTests] = useState(0);
 
-  // Decode token to get faculty_id
+  const authToken = localStorage.getItem("authToken");
+
+  // Fetch location from existing endpoint
   useEffect(() => {
-    const token = localStorage.getItem("authToken");
-    if (token) {
+    const fetchLocation = async () => {
       try {
-        const decodedToken = jwtDecode(token);
-        if (decodedToken.faculty) {
-          setFacultyId(decodedToken.faculty);
-        } else {
-          console.error("❌ Faculty ID missing in token");
-          setQuizState("error");
-        }
-      } catch (error) {
-        console.error("❌ Error decoding token:", error);
-        setQuizState("error");
+        const res = await fetch("http://ip-api.com/json/");
+        const data = await res.json();
+        setLocation({ city: data.city || "Unknown", province: data.regionName || "Unknown" });
+      } catch {
+        setLocation({ city: "Unknown", province: "Unknown" });
       }
-    } else {
-      console.error("❌ No token found in localStorage");
-      setQuizState("error");
-    }
-  }, [setQuizState]);
-
-  // Timer countdown
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          handleSubmit();
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(timer);
+    };
+    fetchLocation();
   }, []);
 
-  // Store chapter_id in sessionStorage when questions are loaded
+  // Update date and time
   useEffect(() => {
-    if (limitedQuestions.length > 0) {
-      const chapterId = limitedQuestions[0]?.chapter_id || 1; // Fallback to 1 if missing
-      sessionStorage.setItem('chapter_id', chapterId); // Store in sessionStorage
-    }
-  }, [limitedQuestions]);
+    const updateDateTime = () => setDateTime(new Date().toLocaleString("en-US", { dateStyle: "full", timeStyle: "short" }));
+    updateDateTime();
+    const interval = setInterval(updateDateTime, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
-  // Function to submit answer to API
-  const submitAnswer = async (questionIndex, answerIndex) => {
-    if (!facultyId) {
-      console.error("❌ Faculty ID is missing.");
+  // Handle authentication & extract user info
+  useEffect(() => {
+    if (!authToken) {
+      navigate("/login");
       return;
     }
-
-    const token = localStorage.getItem("authToken");
-    if (!token) {
-      console.error("❌ No token found.");
-      return;
-    }
-
-    if (!limitedQuestions[questionIndex]?.id) {
-      console.error("❌ Question ID is missing for question index:", questionIndex);
-      return;
-    }
-
-    // Retrieve chapter_id from sessionStorage
-    const chapterId = sessionStorage.getItem("chapter_id");
-    if (!chapterId) {
-      console.error("❌ chapter_id is missing.");
-      return;
-    }
-
-    // Adjusted answer index
-    const adjustedAnswerIndex = answerIndex === 0 ? 1 : answerIndex + 1;
-
-    console.log(
-      `📡 Debug: Sending answer for Question ${questionIndex + 1}`,
-      `| Selected Index: ${answerIndex}`,
-      `| Adjusted Index Sent: ${adjustedAnswerIndex}`
-    );
-
     try {
-      const response = await fetch("/practise/chapteranswer", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          question_id: limitedQuestions[questionIndex].id,
-          answer_index: adjustedAnswerIndex,
-          chapter_id: chapterId, // Include chapter_id in the request
-        }),
-      });
-
-      if (!response.ok) {
-        const errorMessage = await response.text();
-        console.error("❌ Failed to submit answer:", errorMessage);
-      } else {
-        console.log("✅ Answer submitted successfully!");
-      }
-    } catch (error) {
-      console.error("❌ Error submitting answer:", error);
-      setQuizState("error");
+      const decoded = jwtDecode(authToken);
+      setUsername(decoded.sub || "Guest");
+      setFacultyId(decoded.faculty || null);
+      loadUserData();
+    } catch (err) {
+      console.error("[ERROR] Invalid token:", err);
+      localStorage.removeItem("authToken");
+      navigate("/login");
     }
-  };
+  }, [authToken, navigate]);
 
-  // Handle Next button (only allowed if an answer is selected)
-  const handleNext = () => {
-    if (selectedAnswers[currentIndex] === undefined) {
-      // Prevent proceeding if no answer is selected
-      return;
-    }
-    setIsSubmitting(true);
-    submitAnswer(currentIndex, selectedAnswers[currentIndex]);
-    setTimeout(() => {
-      if (currentIndex < limitedQuestions.length - 1) {
-        setCurrentIndex(currentIndex + 1);
-      }
-      setIsSubmitting(false);
-    }, 1000); // 1-second delay
-  };
-
-  // Handle Skip button (always sends answer_index: 0)
-  const handleSkip = () => {
-    setSelectedAnswers((prev) => ({
-      ...prev,
-      [currentIndex]: 0, // Mark as skipped
-    }));
-    setIsSubmitting(true);
-    submitAnswer(currentIndex, 0);
-    setTimeout(() => {
-      if (currentIndex < limitedQuestions.length - 1) {
-        setCurrentIndex(currentIndex + 1);
-      }
-      setIsSubmitting(false);
-    }, 1000); // 1-second delay
-  };
-
-  // Handle Previous button (simply navigates back; no API call)
-  const handlePrevious = () => {
-    if (currentIndex > 0 && !isSubmitting) {
-      setCurrentIndex(currentIndex - 1);
-    }
-  };
-
-  // Handle answer selection (overwrites any previous answer for the question)
-  const handleAnswerSelection = (index) => {
-    console.log(`🟢 Selected Option: ${index} (0-based)`);
-    setSelectedAnswers((prev) => ({ ...prev, [currentIndex]: index }));
-  };
-
-  // Submit quiz and navigate to score page
-  const handleSubmit = async () => {
-    // Optionally, you might want to check if the last question has an answer
-    if (selectedAnswers[currentIndex] === undefined) {
-      // Optionally, you can force the user to select an answer on the last question
-      console.error("❌ Please select an answer before submitting.");
-      return;
-    }
-    const token = localStorage.getItem("authToken");
-    if (!token) return console.error("❌ No token found.");
-
+  // Load data from JSON
+  const loadUserData = useCallback(() => {
     try {
-      console.log("📡 Fetching final score...");
+      setTestHistory(chapterStats.testHistory || []);
+      setPracticeCount(chapterStats.practiceCount || 0);
+      setAverageScore(chapterStats.averageScore || 0);
+      setTotalTests(chapterStats.totalTestsCompleted || 0);
+    } catch (err) {
+      console.error("[ERROR] Loading JSON data:", err);
+      setTestHistory([
+        { id: 1, chapter: "Engineering Mathematics", date: "2025-03-22", score: 88, skipped: 2, totalQuestions: 15, timeTaken: "16:20" },
+        { id: 2, chapter: "Statics and Dynamics", date: "2025-03-19", score: 92, skipped: 1, totalQuestions: 20, timeTaken: "19:10" },
+      ]);
+      setPracticeCount(5);
+      setAverageScore(90);
+      setTotalTests(8);
+    }
+  }, []);
 
-      const scoreResponse = await fetch(`/practise/chapterscore`, {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!scoreResponse.ok) {
-        console.error("❌ Error fetching score.");
-        setQuizState("error");
+  // Fetch chapters from existing endpoint
+  useEffect(() => {
+    const fetchChapters = async () => {
+      if (!authToken) {
+        navigate("/login");
         return;
       }
 
-      const scoreData = await scoreResponse.json();
-      localStorage.setItem("quizScoreData", JSON.stringify(scoreData)); // Store score in localStorage
-      console.log("✅ Score data saved!");
-      navigate("/score"); // Redirect to score page
-    } catch (error) {
-      console.error("❌ Error fetching score:", error);
-      setQuizState("error");
-    }
-  };
+      try {
+        const response = await fetch("/allchapters", {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${authToken}`,
+          },
+        });
 
-  // Check if questions exist before rendering
-  if (!limitedQuestions || limitedQuestions.length === 0) {
-    return <div>Loading questions...</div>;
-  }
+        if (!response.ok) throw new Error("Failed to fetch chapters");
+
+        const data = await response.json();
+        console.log("[DEBUG] Fetched chapters from /allchapters:", data); // Debug line to confirm chapter names
+
+        // Map the API response to match the expected structure (id and name)
+        const mappedChapters = data.map(chapter => ({
+          id: chapter.Chapter_id,
+          name: chapter.chapter
+        }));
+        setChapters(mappedChapters);
+      } catch (error) {
+        console.error("[ERROR] Fetching chapters:", error);
+        alert("Failed to load chapters. Please try again later.");
+      }
+    };
+
+    fetchChapters();
+  }, [authToken, navigate]);
+
+  // Handle chapter selection and start the test
+  const handleStartTest = useCallback(() => {
+    if (!selectedChapter) {
+      alert("Please select a chapter before starting the test.");
+      return;
+    }
+
+    setIsLoading(true);
+    sessionStorage.setItem("chapter_id", selectedChapter); // Store Chapter_id for fetching questions
+    navigate("/chapterquiz");
+    setIsLoading(false);
+  }, [selectedChapter, navigate]);
+
+  // Resize handler for sidebar
+  const handleResize = useCallback(() => setIsSidebarOpen(window.innerWidth > 768), []);
+  useEffect(() => {
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [handleResize]);
 
   return (
-    <div className="quiz-container">
-      <div className="timer">
-        ⏳ Time Left: {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, "0")}
-      </div>
-
-      <div className="question-box">
-        <h3>
-          Q{currentIndex + 1}: {limitedQuestions[currentIndex].question}
-        </h3>
-        <ul className="options-list">
-          {Object.entries(limitedQuestions[currentIndex].options).map(([index, option]) => (
-            <li key={index}>
-              <button
-                className={`option-btn ${selectedAnswers[currentIndex] === parseInt(index) ? "selected" : ""}`}
-                onClick={() => handleAnswerSelection(parseInt(index))}
-                disabled={isSubmitting}
+    <div className="dashboard-container">
+      <Sidebar setSidebarOpen={setIsSidebarOpen} />
+      <main className={`dashboard-content ${isSidebarOpen ? "sidebar-expanded" : "sidebar-collapsed"}`}>
+        <header className="dashboard-header">
+          <h1 className="fade-in">Welcome back, {username}!</h1>
+          <div className="user-stats">
+            <div className="stat-item">
+              <span className="stat-label">Location</span>
+              <span className="stat-value">{location.city}, {location.province}</span>
+            </div>
+            <div className="stat-item">
+              <span className="stat-label">Average Score</span>
+              <span className="stat-value">{averageScore.toFixed(1)} marks </span>
+            </div>
+            <div className="stat-item">
+              <span className="stat-label">Tests Completed</span>
+              <span className="stat-value">{totalTests}</span>
+            </div>
+          </div>
+          <div className="datetime">{dateTime}</div>
+        </header>
+        <section className="dashboard-grid">
+          <div className="card test-history">
+            <h2>Recent Test History</h2>
+            {testHistory.length > 0 ? (
+              <table>
+                <thead>
+                  <tr>
+                    <th>Chapter</th>
+                    <th>Date</th>
+                    <th>Score</th>
+                    <th>Skipped</th>
+                    <th>Total</th>
+                    <th>Time</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {testHistory.map((test) => (
+                    <tr key={test.id}>
+                      <td>{test.chapter}</td>
+                      <td>{test.date}</td>
+                      <td>{test.score} </td>
+                      <td>{test.skipped}</td>
+                      <td>{test.totalQuestions}</td>
+                      <td>{test.timeTaken}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <p className="empty-state">No recent tests available.</p>
+            )}
+          </div>
+          <div className="card practice-section">
+            <h2>Engineering Chapter Practice</h2>
+            <div className="chapter-selection">
+              <select
+                value={selectedChapter}
+                onChange={(e) => setSelectedChapter(e.target.value)}
               >
-                {option}
-              </button>
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      <div className="quiz-buttons">
-        {/* Previous button shown if not on the first question */}
-        {currentIndex > 0 && (
-          <button className="quiz-btn" onClick={handlePrevious} disabled={isSubmitting}>
-            Previous
-          </button>
-        )}
-
-        {/* For questions before the last, show Skip and Next buttons */}
-        {currentIndex < limitedQuestions.length - 1 ? (
-          <>
-            <button className="quiz-btn" onClick={handleSkip} disabled={isSubmitting}>
-              Skip
+                <option value="">-- Select a Chapter --</option>
+                {chapters.map((chapter) => (
+                  <option key={chapter.id} value={chapter.id}>
+                    {chapter.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="counter-metric">
+              <span className="counter-value">{practiceCount}</span>
+              <span className="counter-label">Practice Tests Taken</span>
+            </div>
+            <button className="start-quiz-btn" onClick={handleStartTest} disabled={isLoading || !selectedChapter}>
+              {isLoading ? (
+                <span className="loading-spinner">Loading...</span>
+              ) : (
+                "Start Chapter Test"
+              )}
             </button>
-            <button
-              className="quiz-btn"
-              onClick={handleNext}
-              disabled={isSubmitting || selectedAnswers[currentIndex] === undefined}
-            >
-              Next
-            </button>
-          </>
-        ) : (
-          // On the last question, only show the Submit button.
-          <button
-            className="quiz-btn"
-            onClick={handleSubmit}
-            disabled={isSubmitting || selectedAnswers[currentIndex] === undefined}
-          >
-            Submit
-          </button>
-        )}
-      </div>
+          </div>
+        </section>
+      </main>
     </div>
   );
 };

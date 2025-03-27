@@ -1,0 +1,75 @@
+{
+    "testHistory": [
+      {
+        "id": 1,
+        "date": "2025-03-20",
+        "score": 85,
+        "totalQuestions": 20,
+        "skipped": 2,
+        "correct": 17,
+        "incorrect": 1
+      },
+      {
+        "id": 2,
+        "date": "2025-03-15",
+        "score": 78,
+        "totalQuestions": 20,
+        "skipped": 1,
+        "correct": 15,
+        "incorrect": 4
+      },
+      {
+        "id": 3,
+        "date": "2025-03-10",
+        "score": 92,
+        "totalQuestions": 20,
+        "skipped": 0,
+        "correct": 18,
+        "incorrect": 2
+      }
+    ],
+    "leaderboard": [
+      {
+        "id": 1,
+        "name": "Sujan Rai",
+        "score": 95,
+        "testsTaken": 5,
+        "averageScore": 92
+      },
+      {
+        "id": 2,
+        "name": "Pradeep Thapa",
+        "score": 90,
+        "testsTaken": 4,
+        "averageScore": 88
+      },
+      {
+        "id": 3,
+        "name": "Anjali Shah",
+        "score": 88,
+        "testsTaken": 6,
+        "averageScore": 85
+      },
+      {
+        "id": 4,
+        "name": "Manoj Bhandari",
+        "score": 85,
+        "testsTaken": 3,
+        "averageScore": 82
+      },
+      {
+        "id": 5,
+        "name": "Kiran Gurung",
+        "score": 80,
+        "testsTaken": 5,
+        "averageScore": 78
+      },
+      {
+        "id": 6,
+        "name": "Dipesh KC",
+        "score": 78,
+        "testsTaken": 4,
+        "averageScore": 75
+      }
+    ]
+  }
