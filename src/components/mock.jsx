@@ -1,69 +1,48 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 import Sidebar from "./sidebar";
 import "./CSS/mock.css";
 
-const Mock = ({ setQuestions, setQuizState }) => {
-  const [username, setUsername] = useState("");
-  const [facultyId, setFacultyId] = useState(null);
-  const [dateTime, setDateTime] = useState("");
-  const [location, setLocation] = useState({ city: "Loading...", province: "Loading..." });
-  const [error, setError] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [shouldRedirect, setShouldRedirect] = useState(false);
+// Import mock data for leaderboard
+import mockData from "./data/mockData.json"; // Adjust path based on your project structure
+
+// Custom Hooks
+const useAuth = () => {
   const navigate = useNavigate();
-
-  const testHistory = [
-    { score: 85, skipped: 2 },
-    { score: 78, skipped: 1 },
-    { score: 92, skipped: 0 },
-  ];
-
-  const leaderboard = [
-    { name: "Sujan Rai", score: 85 },
-    { name: "Pradeep Thapa", score: 78 },
-    { name: "Anjali Shah", score: 92 },
-    { name: "Manoj Bhandari", score: 80 },
-    { name: "Kiran Gurung", score: 75 },
-    { name: "Dipesh KC", score: 88 },
-  ];
+  const [user, setUser] = useState({ username: "", facultyId: null });
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const initialize = async () => {
-      const token = localStorage.getItem("authToken");
-      if (!token) {
-        setShouldRedirect(true);
+    const token = localStorage.getItem("authToken");
+    if (!token) {
+      navigate("/login", { replace: true });
+      return;
+    }
+
+    try {
+      const decoded = jwtDecode(token);
+      const currentTime = Date.now() / 1000;
+      if (decoded.exp < currentTime) {
+        localStorage.removeItem("authToken");
+        navigate("/login", { replace: true });
         return;
       }
-
-      try {
-        const decoded = jwtDecode(token);
-        const currentTime = Date.now() / 1000;
-        if (decoded.exp < currentTime) {
-          localStorage.removeItem("authToken");
-          setShouldRedirect(true);
-          return;
-        }
-
-        setUsername(decoded.sub || "User");
-        setFacultyId(decoded.faculty);
-        setLoading(false);
-      } catch (err) {
-        console.error("Invalid token", err);
-        localStorage.removeItem("authToken");
-        setShouldRedirect(true);
-      }
-    };
-
-    initialize();
-  }, []);
-
-  useEffect(() => {
-    if (shouldRedirect) {
-      navigate("/login");
+      setUser({ username: decoded.sub || "User", facultyId: decoded.faculty });
+    } catch (err) {
+      console.error("Invalid token", err);
+      localStorage.removeItem("authToken");
+      navigate("/login", { replace: true });
+    } finally {
+      setLoading(false);
     }
-  }, [shouldRedirect, navigate]);
+  }, [navigate]);
+
+  return { ...user, loading };
+};
+
+const useLocation = () => {
+  const [location, setLocation] = useState({ city: "Loading...", province: "Loading..." });
 
   useEffect(() => {
     fetch("http://ip-api.com/json/")
@@ -78,6 +57,12 @@ const Mock = ({ setQuestions, setQuizState }) => {
         setLocation({ city: "Unknown", province: "Unknown" });
       });
   }, []);
+
+  return location;
+};
+
+const useDateTime = () => {
+  const [dateTime, setDateTime] = useState("");
 
   useEffect(() => {
     const updateDateTime = () => {
@@ -95,17 +80,133 @@ const Mock = ({ setQuestions, setQuizState }) => {
     return () => clearInterval(interval);
   }, []);
 
-  const startQuiz = async () => {
-    if (loading) return;
-    if (!facultyId) {
-      setError("Faculty ID is missing. Please log in again.");
+  return dateTime;
+};
+
+// Custom Hook for Leaderboard Data from JSON
+const useLeaderboardData = () => {
+  const [leaderboard, setLeaderboard] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchLeaderboard = async () => {
+      try {
+        setLeaderboard(mockData.leaderboard || []);
+      } catch (err) {
+        console.error("Error loading leaderboard data:", err);
+        setError("Failed to load leaderboard data.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchLeaderboard();
+  }, []);
+
+  return { leaderboard, loading, error };
+};
+
+// Static Test History
+const TEST_HISTORY = [
+  { score: 85, skipped: 2 },
+  { score: 78, skipped: 1 },
+  { score: 92, skipped: 0 },
+];
+
+// Components
+const InfoCard = ({ label, value }) => (
+  <div className="info-card">
+    <span className="info-label">{label}</span>
+    <span>{value}</span>
+  </div>
+);
+
+const TestHistoryTable = ({ data }) => (
+  <div className="card test-history">
+    <h2>Last Test History</h2>
+    {data.length === 0 ? (
+      <p>No test history available.</p>
+    ) : (
+      <table>
+        <thead>
+          <tr>
+            <th>S.N</th>
+            <th>Score</th>
+            <th>Skipped Questions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {data.map((test, index) => (
+            <tr key={index}>
+              <td>{index + 1}</td>
+              <td>{test.score}</td>
+              <td>{test.skipped}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    )}
+  </div>
+);
+
+const LeaderboardTable = ({ data, loading, error, onStartQuiz }) => {
+  if (loading) return <div className="card">Loading leaderboard...</div>;
+  if (error) return <div className="card error">{error}</div>;
+
+  return (
+    <div className="card">
+      <h2>Leaderboard</h2>
+      {data.length === 0 ? (
+        <p>No leaderboard data available.</p>
+      ) : (
+        <table className="leaderboard-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Score</th>
+            </tr>
+          </thead>
+          <tbody>
+            {data.map((player, index) => (
+              <tr key={index}>
+                <td>{player.name}</td>
+                <td>{player.score}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+      <button className="start-quiz-btn" onClick={onStartQuiz}>
+        Start Test
+      </button>
+    </div>
+  );
+};
+
+// Main Component
+const Mock = ({ setQuestions, setQuizState }) => {
+  const { username, facultyId, loading: authLoading } = useAuth();
+  const location = useLocation();
+  const dateTime = useDateTime();
+  const { leaderboard, loading: leaderboardLoading, error: leaderboardError } = useLeaderboardData();
+  const navigate = useNavigate();
+  const [error, setError] = useState(null);
+  const [fetching, setFetching] = useState(false);
+  const [isSidebarOpen, setSidebarOpen] = useState(false); // Renamed to match Sidebar expectation
+
+  // Fetch questions and start quiz
+  const startQuiz = useCallback(async () => {
+    if (authLoading || !facultyId) {
+      setError("Authentication in progress or faculty ID missing.");
       return;
     }
 
     setError(null);
+    setFetching(true);
     try {
       const token = localStorage.getItem("authToken");
-      const response = await fetch(`http://localhost:8000/mockexam/questions?faculty_id=${facultyId}`, {
+      const response = await fetch(`/mockexam/questions?faculty_id=${facultyId}`, {
         method: "GET",
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -113,7 +214,7 @@ const Mock = ({ setQuestions, setQuizState }) => {
       if (response.status === 403) {
         setError("Access denied. Please log in again.");
         localStorage.removeItem("authToken");
-        setShouldRedirect(true);
+        navigate("/login", { replace: true });
         return;
       }
 
@@ -150,79 +251,40 @@ const Mock = ({ setQuestions, setQuizState }) => {
     } catch (err) {
       console.error("Error fetching questions:", err);
       setError(err.message || "Failed to fetch questions. Please try again.");
+    } finally {
+      setFetching(false);
     }
-  };
+  }, [authLoading, facultyId, navigate, setQuestions, setQuizState]);
 
-  if (loading) {
-    return <div>Loading...</div>;
+  if (authLoading) {
+    return <div>Loading authentication...</div>;
   }
 
   return (
-    <div className="dashboard-container">
-      <Sidebar /> {/* Assuming sidebar is styled separately */}
+    <div className={`dashboard-container ${isSidebarOpen ? "sidebar-open" : ""}`}>
+      <Sidebar isOpen={isSidebarOpen} setSidebarOpen={setSidebarOpen} />
       <main className="dashboard-content">
         <div className="dashboard-header">
+          <button className="sidebar-toggle-btn" onClick={() => setSidebarOpen(!isSidebarOpen)}>
+            {isSidebarOpen ? "Close" : "Menu"}
+          </button>
           <h1>Welcome, {username}!</h1>
           <div className="user-info">
-            <div className="info-card">
-              <span className="info-label">Province</span>
-              <span>{location.province}</span>
-            </div>
-            <div className="info-card">
-              <span className="info-label">City</span>
-              <span>{location.city}</span>
-            </div>
-            <div className="info-card">
-              <span className="info-label">Date & Time</span>
-              <span>{dateTime}</span>
-            </div>
+            <InfoCard label="Province" value={location.province} />
+            <InfoCard label="City" value={location.city} />
+            <InfoCard label="Date & Time" value={dateTime} />
           </div>
         </div>
         {error && <div className="error-message">{error}</div>}
+        {fetching && <div className="loading-message">Fetching questions...</div>}
         <div className="dashboard-grid">
-          <div className="card test-history">
-            <h2>Last Test History</h2>
-            <table>
-              <thead>
-                <tr>
-                  <th>S.N</th>
-                  <th>Score</th>
-                  <th>Skipped Questions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {testHistory.map((test, index) => (
-                  <tr key={index}>
-                    <td>{index + 1}</td>
-                    <td>{test.score}</td>
-                    <td>{test.skipped}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <div className="card">
-            <h2>Leaderboard</h2>
-            <table className="leaderboard-table">
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Score</th>
-                </tr>
-              </thead>
-              <tbody>
-                {leaderboard.map((player, index) => (
-                  <tr key={index}>
-                    <td>{player.name}</td>
-                    <td>{player.score}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            <button className="start-quiz-btn" onClick={startQuiz} disabled={loading}>
-              Start Test
-            </button>
-          </div>
+          <TestHistoryTable data={TEST_HISTORY} />
+          <LeaderboardTable
+            data={leaderboard}
+            loading={leaderboardLoading}
+            error={leaderboardError}
+            onStartQuiz={startQuiz}
+          />
         </div>
       </main>
     </div>

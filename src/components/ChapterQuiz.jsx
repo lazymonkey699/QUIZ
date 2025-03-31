@@ -34,6 +34,7 @@ const ChapterQuiz = () => {
   const [isQuizStarted, setIsQuizStarted] = useState(false);
   const [hasRedirected, setHasRedirected] = useState(false);
   const [visited, setVisited] = useState(new Set());
+  const [sessionEndTime, setSessionEndTime] = useState(null);
   const token = localStorage.getItem("authToken");
 
   // Token validation
@@ -69,7 +70,7 @@ const ChapterQuiz = () => {
     }
   }, [dispatch, navigate, token, hasRedirected]);
 
-  // Fetch chapter questions
+  // Fetch chapter questions and session details
   useEffect(() => {
     if (!facultyId || chapterQuestions.length > 0 || hasRedirected) return;
 
@@ -78,10 +79,7 @@ const ChapterQuiz = () => {
       try {
         const chapterId = sessionStorage.getItem("chapter_id");
         if (!chapterId) {
-          dispatch(setError("No chapter selected"));
-          setHasRedirected(true);
-          navigate("/chapterwise", { replace: true });
-          return;
+          throw new Error("No chapter selected");
         }
 
         const response = await fetch(`/practise/chapters?chapter_id=${chapterId}`, {
@@ -93,29 +91,47 @@ const ChapterQuiz = () => {
         });
 
         if (!response.ok) {
+          const errorText = await response.text();
           if (response.status === 403) {
             localStorage.removeItem("authToken");
             throw new Error("Unauthorized access to chapter questions");
           }
-          throw new Error("Failed to fetch chapter questions");
+          if (response.status === 404) {
+            throw new Error("Chapter or questions not found");
+          }
+          throw new Error(`Failed to fetch chapter questions: ${errorText}`);
         }
 
         const data = await response.json();
-        const allQuestions = data.subchapters.flatMap(subchapter =>
-          subchapter.questions.map(q => ({
+        const allQuestions = data.subchapters.flatMap((subchapter) =>
+          subchapter.questions.map((q) => ({
             id: q.id,
             question: q.question,
-            options: Object.values(q.options),
+            options: Object.values(q.options || {}),
             correctAnswer: q.correct_answer,
             level: q.level,
           }))
         );
 
+        if (allQuestions.length === 0) {
+          throw new Error("No questions found for this chapter");
+        }
+
         dispatch(setChapterQuestions(allQuestions));
-        dispatch(setChapterTimeLeft(1800));
+
+        const today = new Date();
+        const [hours, minutes, seconds] = data.session.end_time.split(":");
+        const endTime = new Date(today);
+        endTime.setHours(parseInt(hours), parseInt(minutes), parseInt(seconds), 0);
+        setSessionEndTime(endTime);
+
+        const timeLeft = Math.max(0, Math.floor((endTime - Date.now()) / 1000));
+        dispatch(setChapterTimeLeft(timeLeft));
       } catch (err) {
         console.error("[ERROR] Fetching chapter questions:", err.message);
         dispatch(setError(err.message));
+        setHasRedirected(true);
+        navigate("/chapterwise", { replace: true });
       } finally {
         setIsLoading(false);
       }
@@ -124,28 +140,30 @@ const ChapterQuiz = () => {
     fetchChapterQuestions();
   }, [dispatch, navigate, facultyId, token, hasRedirected]);
 
-  // Countdown
+  // Countdown before quiz starts
   useEffect(() => {
     if (countdown <= 0) {
       setIsQuizStarted(true);
       return;
     }
-    const countdownTimer = setInterval(() => setCountdown(prev => prev - 1), 1000);
+    const countdownTimer = setInterval(() => setCountdown((prev) => prev - 1), 1000);
     return () => clearInterval(countdownTimer);
   }, [countdown]);
 
-  // Timer
+  // Timer synced with backend session end time
   useEffect(() => {
-    if (!isQuizStarted || chapterTimeLeft <= 0) return;
-    const timer = setInterval(() => {
-      dispatch(setChapterTimeLeft(chapterTimeLeft - 1));
-      if (chapterTimeLeft <= 1) {
-        clearInterval(timer);
+    if (!isQuizStarted || !sessionEndTime || chapterTimeLeft <= 0) return;
+    const updateTimer = () => {
+      const timeLeft = Math.max(0, Math.floor((sessionEndTime - Date.now()) / 1000));
+      dispatch(setChapterTimeLeft(timeLeft));
+      if (timeLeft <= 0) {
         handleSubmit();
       }
-    }, 1000);
+    };
+    updateTimer();
+    const timer = setInterval(updateTimer, 1000);
     return () => clearInterval(timer);
-  }, [chapterTimeLeft, dispatch, isQuizStarted]);
+  }, [isQuizStarted, sessionEndTime, dispatch]);
 
   // Submit all answers sequentially
   const submitAllAnswers = async () => {
@@ -156,13 +174,15 @@ const ChapterQuiz = () => {
         throw new Error("No chapter ID found");
       }
 
-      // Submit each answer sequentially
+      console.log(`Starting submission at ${new Date().toISOString()}, Time left: ${chapterTimeLeft}s`);
       for (let i = 0; i < chapterQuestions.length; i++) {
         const answer = {
           chapter_id: parseInt(chapterId),
           question_id: chapterQuestions[i].id,
           answer_index: selectedChapterAnswers[i] !== undefined ? selectedChapterAnswers[i] : 0,
         };
+
+        console.log(`Submitting answer for question ${chapterQuestions[i].id}:`, answer);
 
         const response = await fetch("/practise/chapteranswer", {
           method: "POST",
@@ -174,16 +194,22 @@ const ChapterQuiz = () => {
         });
 
         if (!response.ok) {
+          const errorText = await response.text();
+          console.error(`Submission failed for question ${chapterQuestions[i].id}: ${errorText}`);
           if (response.status === 403) {
             localStorage.removeItem("authToken");
             throw new Error("Unauthorized access to submit answers");
           }
-          throw new Error(`Failed to submit answer for question ${chapterQuestions[i].id}`);
+          if (response.status === 404) {
+            throw new Error("No active session found for this chapter");
+          }
+          throw new Error(`Failed to submit answer for question ${chapterQuestions[i].id}: ${errorText}`);
         }
       }
     } catch (error) {
       console.error("Error submitting answers:", error.message);
       dispatch(setError(error.message));
+      throw error;
     }
   };
 
@@ -191,12 +217,12 @@ const ChapterQuiz = () => {
   const handleNext = () => {
     if (selectedChapterAnswers[currentChapterIndex] === undefined) return;
     dispatch(setIsChapterSubmitting(true));
-    setVisited(prev => new Set(prev).add(currentChapterIndex));
+    setVisited((prev) => new Set(prev).add(currentChapterIndex));
     setTimeout(() => {
       if (currentChapterIndex < chapterQuestions.length - 1) {
         dispatch(incrementChapterIndex());
       } else {
-        handleSubmit(); // Auto-submit on last question
+        handleSubmit();
       }
       dispatch(setIsChapterSubmitting(false));
     }, 500);
@@ -204,12 +230,12 @@ const ChapterQuiz = () => {
 
   const handleSkip = () => {
     dispatch(setSelectedChapterAnswer({ index: currentChapterIndex, answer: 0 }));
-    setVisited(prev => new Set(prev).add(currentChapterIndex));
+    setVisited((prev) => new Set(prev).add(currentChapterIndex));
     setTimeout(() => {
       if (currentChapterIndex < chapterQuestions.length - 1) {
         dispatch(incrementChapterIndex());
       } else {
-        handleSubmit(); // Auto-submit on last question
+        handleSubmit();
       }
     }, 500);
   };
@@ -221,7 +247,7 @@ const ChapterQuiz = () => {
   };
 
   const handleAnswerSelection = (answerValue) => {
-    if (!isQuizStarted) return;
+    if (!isQuizStarted || isChapterSubmitting) return;
     dispatch(setSelectedChapterAnswer({ index: currentChapterIndex, answer: answerValue }));
   };
 
@@ -230,29 +256,31 @@ const ChapterQuiz = () => {
 
     dispatch(setIsChapterSubmitting(true));
     try {
-      // Submit all answers sequentially
       await submitAllAnswers();
 
-      // Fetch the score
       const chapterId = sessionStorage.getItem("chapter_id");
       const response = await fetch(`/practise/chapterscore?chapter_id=${chapterId}`, {
         method: "GET",
-        headers: { 
+        headers: {
           Authorization: `Bearer ${token}`,
-          Accept: "application/json"
+          Accept: "application/json",
         },
       });
 
       if (!response.ok) {
+        const errorText = await response.text();
         if (response.status === 403) {
           localStorage.removeItem("authToken");
           throw new Error("Unauthorized access to fetch score");
         }
-        throw new Error("Failed to fetch score");
+        if (response.status === 404) {
+          throw new Error("No session found for scoring");
+        }
+        throw new Error(`Failed to fetch score: ${errorText}`);
       }
 
       const scoreData = await response.json();
-      localStorage.setItem("chapterQuizScoreData", JSON.stringify(scoreData));
+      localStorage.setItem("chapterQuizScoreData", JSON.stringify(scoreData.score));
       navigate("/chapter-score", { replace: true });
     } catch (error) {
       console.error("Error in submission:", error.message);
@@ -266,7 +294,7 @@ const ChapterQuiz = () => {
   const questionNavButtons = useMemo(() => {
     return chapterQuestions.map((q, index) => {
       const isSkipped = selectedChapterAnswers[index] === 0;
-      const isAttempted = selectedChapterAnswers[index] !== undefined && selectedChapterAnswers[index] !== 0;
+      const isAttempted = selectedChapterAnswers[index] !== undefined && !isSkipped;
       const isActive = index === currentChapterIndex;
       return (
         <button
@@ -281,8 +309,10 @@ const ChapterQuiz = () => {
     });
   }, [chapterQuestions, currentChapterIndex, selectedChapterAnswers, dispatch]);
 
-  // Check if all questions are processed
-  const allQuestionsProcessed = chapterQuestions.every((_, index) => selectedChapterAnswers[index] !== undefined);
+  // Check if all questions have been processed (using object keys)
+  const allQuestionsProcessed = chapterQuestions.every((_, index) => 
+    selectedChapterAnswers[index] !== undefined
+  );
 
   // Render states
   if (error) return <div className="error-message">Error: {error}</div>;
@@ -327,7 +357,7 @@ const ChapterQuiz = () => {
                   aria-label={`Select option ${value}`}
                   aria-pressed={selectedChapterAnswers[currentChapterIndex] === value}
                 >
-                  {chapterQuestions[currentChapterIndex].options[value - 1]}
+                  {chapterQuestions[currentChapterIndex].options[value - 1] || "No option available"}
                 </button>
               </li>
             ))}

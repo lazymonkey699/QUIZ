@@ -1,33 +1,38 @@
 /* General Layout */
 .dashboard-container {
-  display: flex; /* Keep flex for compatibility with separate sidebar */
+  display: flex;
   min-height: 100vh;
-  background: linear-gradient(135deg, #eef2f7 0%, #d9e2ff 100%); /* Matching gradient */
+  background: linear-gradient(135deg, #eef2f7 0%, #d9e2ff 100%);
   overflow-x: hidden;
 }
 
-/* Main Content */
 .dashboard-content {
   flex: 1;
-  padding: 25px; /* Matching padding */
+  padding: 25px;
+  margin-left: 80px; /* Default sidebar width when collapsed */
+  transition: margin-left 0.3s ease-in-out;
   background: #ffffff;
-  border-radius: 0 15px 15px 0; /* Matching radius */
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05); /* Matching shadow */
-  overflow-y: auto;
+  border-radius: 0 15px 15px 0;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+}
+
+.dashboard-container.sidebar-open .dashboard-content {
+  margin-left: 250px; /* Expanded sidebar width */
 }
 
 /* Header */
 .dashboard-header {
-  margin-bottom: 25px; /* Matching margin */
+  margin-bottom: 25px;
   text-align: center;
+  position: relative; /* For toggle button positioning */
 }
 
 .dashboard-header h1 {
-  font-size: 32px; /* Matching size */
-  font-weight: 800; /* Matching weight */
-  color: #1a3c5e; /* Matching color */
-  margin: 0 0 12px; /* Matching spacing */
-  animation: fadeIn 0.8s ease-out; /* Matching animation */
+  font-size: 32px;
+  font-weight: 800;
+  color: #1a3c5e;
+  margin: 0 0 12px;
+  animation: fadeIn 0.8s ease-out;
 }
 
 @keyframes fadeIn {
@@ -38,175 +43,201 @@
 .user-info {
   display: flex;
   justify-content: center;
-  gap: 15px; /* Matching gap */
+  gap: 15px;
   flex-wrap: wrap;
-  margin-bottom: 8px; /* Matching margin */
+  margin-bottom: 8px;
 }
 
 .info-card {
-  background: #f7f9fc; /* Matching background */
-  padding: 6px 12px; /* Matching padding */
-  border-radius: 8px; /* Matching radius */
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05); /* Matching shadow */
-  border: 1px solid #e0e7ff; /* Matching border */
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  min-width: 200px; /* Ensure readability */
+  background: #f7f9fc;
+  padding: 6px 12px;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e0e7ff;
 }
 
 .info-label {
   display: block;
-  font-size: 12px; /* Matching size */
-  color: #666; /* Matching color */
-  font-weight: 500; /* Matching weight */
+  font-size: 12px;
+  color: #666;
+  font-weight: 500;
 }
 
-.info-card span {
-  font-size: 14px; /* Matching size */
-  color: #1a3c5e; /* Matching color */
-  font-weight: 700; /* Matching weight */
+.info-card span:not(.info-label) {
+  font-size: 14px;
+  color: #1a3c5e;
+  font-weight: 700;
+}
+
+/* Error and Loading Messages */
+.error-message {
+  color: #721c24;
+  background-color: #f8d7da;
+  padding: 8px 12px;
+  border-radius: 6px;
+  margin-bottom: 15px;
+  text-align: center;
+  font-size: 14px;
+}
+
+.loading-message {
+  color: #1a3c5e;
+  font-style: italic;
+  text-align: center;
+  margin-bottom: 15px;
+  font-size: 14px;
 }
 
 /* Grid and Cards */
 .dashboard-grid {
   display: grid;
-  grid-template-columns: 2fr 1fr; /* Matching ratio */
-  gap: 15px; /* Matching gap */
-  max-width: 1100px; /* Matching max-width */
+  grid-template-columns: 2fr 1fr; /* Matches your dashboard ratio */
+  gap: 15px;
+  max-width: 1100px;
   margin: 0 auto;
 }
 
 .card {
-  background: #fff; /* Matching background */
-  padding: 15px; /* Matching padding */
-  border-radius: 10px; /* Matching radius */
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.06); /* Matching shadow */
-  transition: transform 0.3s ease, box-shadow 0.3s ease; /* Matching transition */
+  background: #fff;
+  padding: 15px;
+  border-radius: 10px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.06);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .card:hover {
-  transform: translateY(-2px); /* Matching hover effect */
-  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1); /* Matching hover shadow */
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
 }
 
 .card h2 {
-  margin: 0 0 10px; /* Matching margin */
-  font-size: 18px; /* Matching size */
-  color: #1a3c5e; /* Matching color */
-  font-weight: 700; /* Matching weight */
+  margin: 0 0 10px;
+  font-size: 18px;
+  color: #1a3c5e;
+  font-weight: 700;
+}
+
+.card.error {
+  color: #721c24;
+  background-color: #f8d7da;
+}
+
+.card p {
+  color: #888;
+  font-style: italic;
+  text-align: center;
 }
 
 /* Test History */
 .test-history table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 13px; /* Matching size */
+  font-size: 13px;
 }
 
 .test-history th,
 .test-history td {
-  padding: 8px; /* Matching padding */
-  text-align: center; /* Matching alignment */
-  border-bottom: 1px solid #eef2f7; /* Matching border */
+  padding: 8px;
+  text-align: center;
+  border-bottom: 1px solid #eef2f7;
 }
 
 .test-history th {
-  background: #1a3c5e; /* Matching background */
-  color: #fff; /* White text for contrast */
-  font-weight: 600; /* Matching weight */
+  background: #1a3c5e;
+  color: white; /* Adjusted for contrast */
+  font-weight: 600;
 }
 
 .test-history td {
-  color: #444; /* Matching color */
+  color: #444;
 }
 
-/* Leaderboard Table */
+/* Leaderboard */
 .leaderboard-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 13px; /* Matching size */
+  font-size: 13px;
 }
 
 .leaderboard-table th,
 .leaderboard-table td {
-  padding: 8px; /* Matching padding */
-  text-align: center; /* Matching alignment */
-  border-bottom: 1px solid #eef2f7; /* Matching border */
+  padding: 8px;
+  text-align: center;
+  border-bottom: 1px solid #eef2f7;
 }
 
 .leaderboard-table th {
-  background: #1a3c5e; /* Matching background */
-  color: #fff; /* White text for contrast */
-  font-weight: 600; /* Matching weight */
+  background: #1a3c5e;
+  color: white;
+  font-weight: 600;
 }
 
 .leaderboard-table td {
-  color: #444; /* Matching color */
+  color: #444;
 }
 
 /* Start Quiz Button */
 .start-quiz-btn {
-  padding: 8px 20px; /* Matching padding */
-  font-size: 14px; /* Matching size */
-  font-weight: 600; /* Matching weight */
-  background: #1a3c5e; /* Matching background */
-  color: white; /* Matching color */
+  padding: 8px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  background: #1a3c5e;
+  color: white;
   border: none;
-  border-radius: 6px; /* Matching radius */
+  border-radius: 6px;
   cursor: pointer;
-  transition: background 0.3s ease, transform 0.2s ease; /* Matching transition */
+  transition: background 0.3s ease, transform 0.2s ease;
   display: block;
-  margin: 15px auto 0; /* Matching centering */
+  margin: 15px auto 0; /* Centered with top margin */
 }
 
 .start-quiz-btn:hover {
-  background: #142a44; /* Matching hover background */
-  transform: scale(1.02); /* Matching hover effect */
+  background: #142a44;
+  transform: scale(1.02);
 }
 
 .start-quiz-btn:disabled {
-  background: #ccd5db; /* Matching disabled background */
+  background: #ccd5db;
   cursor: not-allowed;
   transform: none;
 }
 
-/* Error Message */
-.error-message {
-  background: #ffebee; /* Matching background */
-  color: #c62828; /* Matching color */
-  padding: 8px; /* Matching padding */
-  border-radius: 6px; /* Matching radius */
-  margin-bottom: 15px; /* Matching margin */
-  text-align: center;
-  font-size: 13px; /* Matching size */
-  font-weight: 500; /* Matching weight */
-}
+/* Sidebar Toggle Button */
+
+
 
 /* Responsive Design */
 @media (max-width: 768px) {
   .dashboard-content {
-    padding: 15px; /* Matching mobile padding */
-    border-radius: 0; /* Matching mobile radius */
+    padding: 15px;
+    margin-left: 80px;
+    border-radius: 0;
   }
 
-  .dashboard-header h1 {
-    font-size: 26px; /* Matching mobile size */
-  }
-
-  .user-info {
-    gap: 10px; /* Matching mobile gap */
-    flex-direction: column; /* Matching mobile layout */
+  .dashboard-container.sidebar-open .dashboard-content {
+    margin-left: 250px;
   }
 
   .dashboard-grid {
-    grid-template-columns: 1fr; /* Matching mobile stacking */
+    grid-template-columns: 1fr; /* Stack on mobile */
+  }
+
+  .dashboard-header h1 {
+    font-size: 26px;
+  }
+
+  .user-info {
+    gap: 10px;
+    flex-direction: column;
   }
 
   .start-quiz-btn {
-    padding: 6px 15px; /* Matching mobile padding */
-    font-size: 13px; /* Matching mobile size */
-    width: 100%; /* Full width on mobile */
-    max-width: 300px; /* Matching cap */
+    padding: 6px 15px;
+    font-size: 13px;
+  }
+
+  .sidebar-toggle-btn {
+    padding: 5px 10px;
+    font-size: 13px;
   }
 }

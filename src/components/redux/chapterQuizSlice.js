@@ -5,11 +5,11 @@ const chapterQuizSlice = createSlice({
   initialState: {
     chapterQuestions: [],
     currentChapterIndex: 0,
-    selectedChapterAnswers: {},
+    selectedChapterAnswers: {}, // Kept as object per your current setup
     facultyId: null,
     chapterTimeLeft: 1800,
     isChapterSubmitting: false,
-    error: false,
+    error: null, // Changed to null for consistency (false might imply no error state)
   },
   reducers: {
     setChapterQuestions: (state, action) => {
@@ -40,6 +40,15 @@ const chapterQuizSlice = createSlice({
     setError: (state, action) => {
       state.error = action.payload;
     },
+    resetChapterQuiz: (state) => {
+      state.chapterQuestions = [];
+      state.currentChapterIndex = 0;
+      state.selectedChapterAnswers = {};
+      state.facultyId = null;
+      state.chapterTimeLeft = 1800;
+      state.isChapterSubmitting = false;
+      state.error = null;
+    },
   },
 });
 
@@ -53,6 +62,7 @@ export const {
   setIsChapterSubmitting,
   setChapterTimeLeft,
   setError,
+  resetChapterQuiz,
 } = chapterQuizSlice.actions;
 
 export default chapterQuizSlice.reducer;

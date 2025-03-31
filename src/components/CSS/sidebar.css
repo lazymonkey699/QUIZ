@@ -1,29 +1,49 @@
+/* Base Sidebar Styles */
 .sidebar {
   position: fixed;
   top: 0;
   left: 0;
   height: 100vh;
   width: 250px;
-  background: #2c3e50;
-  transition: width 0.3s ease-in-out;
-  box-shadow: 2px 0px 10px rgba(0, 0, 0, 0.2);
-  display: flex;
-  flex-direction: column;
+  background-color: #f8f9fa;
+  transition: width 0.3s ease, background-color 0.3s ease;
   z-index: 1000;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
 }
 
 .sidebar.collapsed {
-  width: 80px;
+  width: 70px;
 }
 
+.sidebar.dark {
+  background-color: #2c3e50;
+  color: #ecf0f1;
+}
+
+/* Header */
 .sidebar-header {
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   padding: 20px;
-  font-size: 1.2rem;
-  color: #fff;
-  font-weight: bold;
+  border-bottom: 1px solid #e9ecef;
 }
 
+.sidebar.dark .sidebar-header {
+  border-bottom-color: #34495e;
+}
+
+.sidebar-title {
+  margin: 0;
+  font-size: 1.5rem;
+  transition: opacity 0.2s ease;
+}
+
+.sidebar.collapsed .sidebar-title {
+  font-size: 1.2rem;
+}
+
+/* Navigation */
 .sidebar-nav ul {
   list-style: none;
   padding: 0;
@@ -33,26 +53,27 @@
 .sidebar-nav li {
   display: flex;
   align-items: center;
-  padding: 15px;
-  color: #bdc3c7;
+  padding: 15px 20px;
   cursor: pointer;
-  transition: background 0.3s;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 .sidebar-nav li:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background-color: #e9ecef;
+}
+
+.sidebar.dark .sidebar-nav li:hover {
+  background-color: #34495e;
 }
 
 .sidebar-nav li.active {
-  background: #16a085;
-  color: #fff;
-  border-left: 5px solid #1abc9c;
+  background-color: #007bff;
+  color: white;
 }
 
 .sidebar-icon {
-  font-size: 20px;
+  font-size: 1.2rem;
   margin-right: 15px;
-  transition: margin 0.3s ease-in-out;
 }
 
 .sidebar.collapsed .sidebar-icon {
@@ -60,70 +81,47 @@
 }
 
 .sidebar-text {
-  opacity: 1;
-  visibility: visible;
-  transition: opacity 0.3s ease-in-out;
+  font-size: 1rem;
+  transition: opacity 0.2s ease;
 }
 
 .sidebar.collapsed .sidebar-text {
   opacity: 0;
-  visibility: hidden;
+  position: absolute;
 }
 
+/* Theme Toggle */
+.theme-toggle {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.2rem;
+  color: inherit;
+}
+
+/* Toggle Button */
 .sidebar-toggle {
   position: fixed;
-  top: 50%;
-  left: calc(250px - 20px);
-  transform: translateY(-50%);
-  background: #16a085;
+  top: 20px;
+  left: 260px;
+  background-color: #007bff;
   color: white;
   border: none;
-  padding: 12px;
-  cursor: pointer;
+  padding: 10px;
   border-radius: 50%;
-  z-index: 2000;
-  transition: left 0.3s ease-in-out, background 0.3s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.sidebar-toggle:hover {
-  background: #1abc9c;
+  cursor: pointer;
+  transition: left 0.3s ease, transform 0.3s ease;
 }
 
 .sidebar-toggle.open {
-  left: calc(250px + 10px);
-}
-
-.sidebar.collapsed + .sidebar-toggle {
-  left: calc(80px - 20px);
-}
-
-.toggle-icon {
-  transition: transform 0.3s ease-in-out;
+  left: 80px;
 }
 
 .toggle-icon.rotated {
   transform: rotate(180deg);
 }
 
-@media (max-width: 768px) {
-  .sidebar {
-    width: 80px;
-  }
-  .sidebar.open {
-    width: 250px;
-  }
-  .sidebar-toggle {
-    left: calc(80px - 20px);
-    padding: 10px;
-  }
-  .sidebar-toggle.open {
-    left: calc(250px - 30px);
-  }
-}
-
+/* Modal */
 .modal {
   position: fixed;
   top: 0;
@@ -134,34 +132,55 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 3000;
+  animation: fadeIn 0.3s ease;
 }
 
 .modal-content {
   background: white;
   padding: 20px;
+  border-radius: 8px;
   text-align: center;
-  border-radius: 5px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  animation: slideIn 0.3s ease;
 }
 
-.confirm-btn, .cancel-btn {
-  padding: 10px 15px;
+.sidebar.dark .modal-content {
+  background: #34495e;
+  color: #ecf0f1;
+}
+
+.modal-buttons {
+  margin-top: 20px;
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.confirm-btn,
+.cancel-btn {
+  padding: 10px 20px;
   border: none;
+  border-radius: 4px;
   cursor: pointer;
-  color: white;
 }
 
 .confirm-btn {
-  background: #e74c3c;
-  margin-right: 10px;
+  background-color: #dc3545;
+  color: white;
 }
 
 .cancel-btn {
-  background: #bdc3c7;
+  background-color: #6c757d;
+  color: white;
 }
 
-.confirm-btn:focus, .cancel-btn:focus {
-  outline: 2px solid #1abc9c;
-  outline-offset: 2px;
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideIn {
+  from { transform: translateY(-20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
 }

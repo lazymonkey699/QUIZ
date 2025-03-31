@@ -10,6 +10,7 @@ import Mock from "./components/mock";
 import MockQuiz from "./components/mockquiz";
 import Chapterwise from "./components/Chapterwise";
 import ChapterQuiz from "./components/ChapterQuiz";
+import ChapterScore from "./components/ChapterScore";
 import { QuizProvider } from "./QuizContext"; // Updated to named import
 
 const App = () => {
@@ -49,6 +50,7 @@ const App = () => {
                     <Route path="/mockquiz" element={isAuthenticated ? <MockQuiz /> : <Navigate to="/login" />} />
                     <Route path="/chapterwise" element={isAuthenticated ? <Chapterwise /> : <Navigate to="/login" />} />
                     <Route path="/chapterquiz" element={isAuthenticated ? <ChapterQuiz /> : <Navigate to="/login" />} />
+<Route path="/chapter-score" element={<ChapterScore />} />
                     <Route path="/score" element={<Score />} />
                     <Route path="/login" element={<AuthForm />} />
                     <Route path="/" element={<Navigate to={isAuthenticated ? "/student-dashboard" : "/login"} />} />
